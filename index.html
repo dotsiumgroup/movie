@@ -12858,7 +12858,423 @@ const SPECIAL_SUBJECTS = [
 </script>
 <!-- ========== শেষ ========== -->
 
-  <!-- ========== নতুন মিশন সিস্টেম (New Missions Sheet) - API URL আপডেটেড ========== -->
+  <!-- ========== নতুন মিশন সিস্টেম (সম্পূর্ণ কার্যকরী সংস্করণ) ========== -->
+<style>
+/* ট্যাব স্টাইল */
+.mission-tab-container {
+  margin: 20px 0 10px;
+  border-bottom: 2px solid rgba(0, 234, 255, 0.2);
+}
+.mission-tabs {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+.mission-tab {
+  padding: 12px 25px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 234, 255, 0.2);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  color: #aaa;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+.mission-tab i { margin-right: 8px; }
+.mission-tab.active {
+  background: linear-gradient(135deg, rgba(0, 234, 255, 0.2), rgba(255, 0, 200, 0.1));
+  color: #00eaff;
+  border-color: #00eaff;
+  box-shadow: 0 -2px 15px rgba(0, 234, 255, 0.3);
+  transform: translateY(-2px);
+}
+.mission-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+.mission-tab-content {
+  display: none;
+  padding-top: 20px;
+}
+.mission-tab-content.active {
+  display: block;
+}
+/* নতুন মিশন গ্রিড */
+#newMissionsGrid {
+  min-height: 200px;
+}
+#newMissionsGrid .pill {
+  background: linear-gradient(135deg, var(--card-bg), rgba(255, 107, 107, 0.15));
+  border-left: 3px solid #ff6b6b;
+  transition: all 0.3s ease;
+  position: relative !important;
+}
+#newMissionsGrid .pill:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+  border-left-color: #ff3b3b;
+}
+#newMissionsGrid .pill .go {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+.new-mission-subject-link .count-badge {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+  color: white !important;
+  font-weight: bold !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.5) !important;
+  position: absolute !important;
+  bottom: 0px !important;
+  right: 0px !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  border-radius: 10px !important;
+  border: 1px solid white !important;
+  z-index: 999 !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+}
+#newMissionsGrid .empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+}
+#newMissionsGrid .loading {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 107, 107, 0.3);
+  border-radius: 50%;
+  border-top-color: #ff6b6b;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
+<script>
+(function() {
+  'use strict';
+
+  // ========== আপডেটেড API URL ==========
+  const NEW_MISSIONS_API_URL = 'https://script.google.com/macros/s/AKfycbzLOTXaPBY2IOwHqTGfUlGkhAKklxqo90ZRrpDkrVH5VMYITELgMzvZSWGC110hjoZ2EQ/exec';
+
+  // ডেটা স্টোরেজ
+  let newMissionsData = [];
+  let newMissionsGrouped = {};
+
+  // ========== ডেটা ফেচিং ==========
+  async function fetchNewMissionsData() {
+    try {
+      console.log('🔄 Fetching new missions from:', NEW_MISSIONS_API_URL);
+      const response = await fetch(NEW_MISSIONS_API_URL);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      console.log('📦 API response:', data);
+      if (data && data.ok && Array.isArray(data.rows)) {
+        return data.rows;
+      }
+      return [];
+    } catch (error) {
+      console.error('❌ Fetch error:', error);
+      return [];
+    }
+  }
+
+  // ========== টাইমস্ট্যাম্প পার্সিং ==========
+  function parseTimestamp(timestampStr) {
+    try {
+      const dt = new Date(timestampStr);
+      if (isNaN(dt.getTime())) return { date: 'তারিখ নেই', time: 'সময় নেই' };
+      const day = String(dt.getDate()).padStart(2, '0');
+      const month = String(dt.getMonth() + 1).padStart(2, '0');
+      const year = dt.getFullYear();
+      const date = `${day}-${month}-${year}`;
+      const time = dt.toLocaleTimeString('en-US', { 
+        timeZone: 'Asia/Dhaka', hour: 'numeric', minute: '2-digit', hour12: true 
+      });
+      return { date, time };
+    } catch (e) {
+      return { date: 'তারিখ নেই', time: 'সময় নেই' };
+    }
+  }
+
+  // ========== ডেটা নরমালাইজেশন ==========
+  function normalizeNewMissionsRows(rows) {
+    if (!rows || rows.length === 0) return [];
+    
+    // টাইমস্ট্যাম্প অনুযায়ী সাজানো (পুরাতন থেকে নতুন)
+    const sorted = [...rows].sort((a, b) => 
+      new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+    );
+
+    // গ্লোবাল আইডি (nm_ prefix)
+    sorted.forEach((row, i) => { row.globalId = 'nm_' + (i + 1); });
+
+    // সাবজেক্ট গ্রুপিং
+    const grouped = {};
+    sorted.forEach(row => {
+      const subj = (row.subject || 'Unknown').toString().trim();
+      if (!grouped[subj]) grouped[subj] = [];
+      grouped[subj].push(row);
+    });
+
+    // ফাইনাল অ্যারে তৈরি
+    const normalized = [];
+    Object.keys(grouped).forEach(subject => {
+      const subjectRows = grouped[subject].sort((a, b) => 
+        new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+      );
+      subjectRows.forEach((row, idx) => {
+        const { date, time } = parseTimestamp(row.timestamp);
+        normalized.push({
+          subject: subject,
+          link: row.link || '#',
+          title: row.title || 'মিশন',
+          date, time,
+          displaySerial: idx + 1,
+          globalId: row.globalId,
+          type: 'new_mission'
+        });
+      });
+    });
+    console.log('📊 Normalized:', normalized.length, 'items');
+    return normalized;
+  }
+
+  // ========== ট্যাব সেটআপ ==========
+  function setupNewMissionsTab() {
+    const missionsPage = document.getElementById('missions-page');
+    if (!missionsPage) return;
+    if (document.getElementById('missionTabsContainer')) return;
+
+    const missionsTitle = missionsPage.querySelector('h2');
+    if (!missionsTitle) return;
+
+    // ট্যাব কন্টেইনার
+    const tabContainer = document.createElement('div');
+    tabContainer.id = 'missionTabsContainer';
+    tabContainer.className = 'mission-tab-container';
+    tabContainer.innerHTML = `
+      <div class="mission-tabs">
+        <div class="mission-tab active" data-tab="regular-missions"><i class="fas fa-tasks"></i> নিয়মিত মিশন</div>
+        <div class="mission-tab" data-tab="new-missions"><i class="fas fa-rocket"></i> নতুন মিশন</div>
+      </div>
+    `;
+
+    // কন্টেন্ট কন্টেইনার
+    const contentContainer = document.createElement('div');
+    contentContainer.id = 'missionTabContents';
+    contentContainer.innerHTML = `
+      <div class="mission-tab-content active" id="regular-missions-content"></div>
+      <div class="mission-tab-content" id="new-missions-content">
+        <div id="newMissionsGrid" class="grid"></div>
+      </div>
+    `;
+
+    missionsTitle.parentNode.insertBefore(tabContainer, missionsTitle.nextSibling);
+    missionsTitle.parentNode.insertBefore(contentContainer, tabContainer.nextSibling);
+
+    // বিদ্যমান missionsGrid সরানো
+    const existingGrid = document.getElementById('missionsGrid');
+    const regularContent = document.getElementById('regular-missions-content');
+    if (existingGrid && regularContent) regularContent.appendChild(existingGrid);
+
+    // ট্যাব সুইচ ইভেন্ট
+    document.querySelectorAll('.mission-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const tabName = this.dataset.tab;
+        document.querySelectorAll('.mission-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('.mission-tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(tabName + '-content').classList.add('active');
+        if (tabName === 'new-missions' && newMissionsData.length === 0) {
+          loadAndRenderNewMissions();
+        }
+      });
+    });
+    console.log('✅ ট্যাব সেটআপ সম্পন্ন');
+  }
+
+  // ========== নতুন মিশন লোড ও রেন্ডার ==========
+  async function loadAndRenderNewMissions() {
+    const grid = document.getElementById('newMissionsGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div class="empty-state"><div class="loading"></div><p class="bangla-font">মিশন লোড হচ্ছে...</p></div>`;
+
+    try {
+      const rows = await fetchNewMissionsData();
+      if (rows.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ff6b6b;"></i><p class="bangla-font">কোনো মিশন পাওয়া যায়নি</p></div>`;
+        return;
+      }
+      newMissionsData = normalizeNewMissionsRows(rows);
+      newMissionsGrouped = {};
+      newMissionsData.forEach(item => {
+        if (!newMissionsGrouped[item.subject]) newMissionsGrouped[item.subject] = [];
+        newMissionsGrouped[item.subject].push(item);
+      });
+      renderNewMissionsGrid(grid);
+    } catch (error) {
+      console.error(error);
+      grid.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ff6b6b;"></i><p class="bangla-font">লোড করতে সমস্যা হয়েছে</p></div>`;
+    }
+  }
+
+  // ========== গ্রিড রেন্ডার ==========
+  function renderNewMissionsGrid(grid) {
+    const subjects = Object.keys(newMissionsGrouped).sort();
+    if (subjects.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open" style="font-size:48px;opacity:0.5;"></i><p class="bangla-font">কোনো মিশন নেই</p></div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    subjects.forEach(subject => {
+      const missions = newMissionsGrouped[subject];
+      const count = missions.length;
+      const pill = document.createElement('a');
+      pill.className = 'pill new-mission-subject-link';
+      pill.href = '#';
+      pill.setAttribute('data-subject', subject);
+      pill.innerHTML = `
+        <span><i class="fas fa-folder-open"></i> <span class="bangla-font">${subject}</span></span>
+        <span class="go bangla-font">খুলুন (${count})</span>
+      `;
+      // কাউন্ট ব্যাজ
+      const badge = document.createElement('span');
+      badge.className = 'count-badge';
+      badge.textContent = count;
+      pill.style.position = 'relative';
+      pill.appendChild(badge);
+      
+      pill.addEventListener('click', (e) => {
+        e.preventDefault();
+        openNewMissionSubjectPage(subject);
+      });
+      grid.appendChild(pill);
+    });
+  }
+
+  // ========== সাবজেক্ট পেজ ওপেন ==========
+  function openNewMissionSubjectPage(subject) {
+    const missions = newMissionsGrouped[subject] || [];
+    window.currentNewMissionSubject = subject;
+    window.currentNewMissionsData = missions;
+
+    if (typeof window.showSubjectPage === 'function') {
+      const originalRenderCards = window.renderCards;
+      window.renderCards = function(rows, root) {
+        if (window.currentNewMissionsData) {
+          renderNewMissionCards(window.currentNewMissionsData, root);
+        } else if (originalRenderCards) {
+          originalRenderCards(rows, root);
+        }
+      };
+      window.showSubjectPage(subject, 'missions');
+      setTimeout(() => { window.renderCards = originalRenderCards; }, 200);
+    } else {
+      console.error('showSubjectPage নেই');
+    }
+  }
+
+  // ========== কার্ড রেন্ডার ==========
+  function renderNewMissionCards(rows, root) {
+    if (!rows || rows.length === 0) {
+      root.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open" style="font-size:48px;opacity:0.5;"></i><p class="bangla-font">কোনো মিশন নেই</p></div>`;
+      return;
+    }
+    root.innerHTML = '';
+    let completed = [];
+    try { completed = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]'); } catch(e) {}
+
+    rows.forEach(item => {
+      const isCompleted = completed.includes(item.globalId);
+      const isYouTube = item.link && (item.link.includes('youtube.com') || item.link.includes('youtu.be'));
+      const isDrive = item.link && item.link.includes('drive.google.com');
+      
+      const card = document.createElement('div');
+      card.className = 'card fade-in';
+      let onclick = '';
+      if (isYouTube) onclick = `onclick="window.openVideoPlayer('${item.link}', '${item.globalId}', 'mission')"`;
+      else if (isDrive) onclick = `onclick="window.openDrivePlayer('${item.link}', '${item.globalId}', 'mission')"`;
+      else onclick = `onclick="window.trackAndOpenLink('${item.link}', '${item.globalId}', 'mission')"`;
+
+      card.innerHTML = `
+        ${isCompleted ? '<div class="status-indicator status-completed"><i class="fas fa-check"></i></div>' : '<div class="status-indicator status-pending"><i class="fas fa-clock"></i></div>'}
+        <span class="card-badge bangla-font">মিশন ${item.displaySerial}</span>
+        <div class="subject"><i class="fas fa-rocket"></i> <span class="bangla-font">${item.subject}</span></div>
+        <div class="video-title bangla-font">${item.title}</div>
+        <div class="time"><i class="fas fa-calendar"></i> ${item.date} | <i class="fas fa-clock"></i> ${item.time}</div>
+        <a class="btn" href="javascript:void(0)" ${onclick}><i class="fas fa-play-circle"></i> <span class="bangla-font">মিশন দেখুন</span></a>
+      `;
+      root.appendChild(card);
+    });
+  }
+
+  // ========== ট্র্যাকিং ওভাররাইড ==========
+  const originalTrackItem = window.trackItem;
+  if (originalTrackItem) {
+    window.trackItem = function(id, type) {
+      if (id && id.startsWith('nm_')) {
+        try {
+          let comp = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+          if (!comp.includes(id)) {
+            comp.push(id);
+            localStorage.setItem('alim26_dashboard_completed_items', JSON.stringify(comp));
+            if (typeof window.showNotification === 'function') window.showNotification('মিশন সম্পন্ন!', false);
+          }
+        } catch(e) {}
+      } else {
+        originalTrackItem(id, type);
+      }
+    };
+  }
+
+  // ========== ড্যাশবোর্ড ইন্টিগ্রেশন ==========
+  const originalGetItems = window.getItemsFromAllClasses;
+  if (originalGetItems) {
+    window.getItemsFromAllClasses = function() {
+      const items = originalGetItems();
+      if (newMissionsData.length) {
+        newMissionsData.forEach(item => {
+          if (item && item.globalId) {
+            items.missions.push({ id: item.globalId, addDate: item.date });
+          }
+        });
+      }
+      return items;
+    };
+  }
+
+  // ========== মিশন ফোল্ডার প্যাচ ==========
+  function patchMissionsFolder() {
+    const btn = document.getElementById('missions-folder');
+    if (!btn) return;
+    const original = btn.onclick;
+    btn.onclick = function(e) {
+      e.preventDefault();
+      if (typeof window.showMissionsPage === 'function') window.showMissionsPage();
+      setTimeout(setupNewMissionsTab, 50);
+    };
+  }
+
+  // ========== ইনিশিয়ালাইজ ==========
+  function init() {
+    console.log('🚀 নতুন মিশন সিস্টেম চালু');
+    patchMissionsFolder();
+    window.newMissionsData = () => newMissionsData;
+    window.openNewMissionSubjectPage = openNewMissionSubjectPage;
+    if (document.getElementById('missions-page')?.style.display === 'block') {
+      setTimeout(setupNewMissionsTab, 100);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+})();
+  </script>
 </body>
 </html>
