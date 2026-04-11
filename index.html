@@ -13292,6 +13292,61 @@ const SPECIAL_SUBJECTS = [
     init();
   }
 })();
-  </script>      
+  </script> 
+  <script>
+(() => {
+  const re = /\(ক্লাস\)|\(মিশন\)|\(ডকুমেন্ট\)/g;
+
+  function scan(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    for (const node of nodes) {
+      const p = node.parentElement;
+      if (!p || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/i.test(p.tagName) || p.classList.contains('hide-words')) continue;
+
+      const text = node.nodeValue;
+      re.lastIndex = 0;
+      if (!re.test(text)) continue;
+
+      re.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+
+      while ((m = re.exec(text))) {
+        if (m.index > last) frag.append(text.slice(last, m.index));
+        const s = document.createElement('span');
+        s.className = 'hide-words';
+        s.hidden = true;
+        s.textContent = m[0];
+        frag.append(s);
+        last = m.index + m[0].length;
+      }
+
+      if (last < text.length) frag.append(text.slice(last));
+      node.parentNode.replaceChild(frag, node);
+    }
+  }
+
+  const run = () => scan(document.body);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+
+  let timer;
+  new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(run, 50);
+  }).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+})();
+  </script>
 </body>
 </html>
