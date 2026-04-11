@@ -13279,6 +13279,132 @@ const SPECIAL_SUBJECTS = [
     init();
   }
 })();
+
+      // ========== আজকের ক্লাস টেবিলে নতুন মিশন যুক্ত করার প্যাচ ==========
+(function() {
+    // মূল ফাংশন সংরক্ষণ (যদি প্রয়োজন হয়)
+    const originalRenderToday = window.renderTodayClassesSummary;
+    
+    // নতুন ফাংশন যা allClasses এবং allMissions উভয় থেকে আজকের আইটেম দেখাবে
+    window.renderTodayClassesSummary = function() {
+        const today = getTodayDate(); // গ্লোবাল ফাংশন (আপনার কোডে আছে)
+        let allTodayItems = [];
+
+        // 1. allClasses থেকে আজকের ক্লাস
+        if (window.allClasses && Array.isArray(window.allClasses)) {
+            const todayClasses = window.allClasses.filter(cls => cls && cls.date === today);
+            allTodayItems.push(...todayClasses);
+        }
+
+        // 2. নতুন মিশন সিস্টেমের allMissions থেকে আজকের মিশন
+        if (window.allMissions && Array.isArray(window.allMissions)) {
+            const todayMissions = window.allMissions.filter(mission => mission && mission.date === today);
+            allTodayItems.push(...todayMissions);
+        }
+
+        const container = document.getElementById('today-classes-body');
+        if (!container) return;
+
+        if (allTodayItems.length === 0) {
+            container.innerHTML = `<tr><td colspan="3" class="bangla-font" style="text-align: center; padding: 20px;">আজকের জন্য কোন ক্লাস বা মিশন পাওয়া যায়নি</td></tr>`;
+            return;
+        }
+
+        // সময় অনুযায়ী সাজানো
+        allTodayItems.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+        let tableHTML = '';
+        allTodayItems.forEach(item => {
+            const subject = item.subject || 'মিশন';
+            const title = item.title || 'মিশন';
+            const time = item.time || '';
+            tableHTML += `
+                <tr data-subject="${subject}" data-timestamp="${item.timestamp || ''}">
+                    <td><span class="subject-badge bangla-font">${escapeHtml(subject)}</span></td>
+                    <td class="class-info bangla-font">${escapeHtml(title)}</td>
+                    <td class="bangla-font">${time}</td>
+                </tr>
+            `;
+        });
+        container.innerHTML = tableHTML;
+
+        // রো-তে ক্লিক ইভেন্ট
+        document.querySelectorAll('#today-classes-body tr').forEach(row => {
+            row.addEventListener('click', () => {
+                const subject = row.getAttribute('data-subject');
+                const timestamp = row.getAttribute('data-timestamp');
+                
+                // চেক করুন এটি নতুন মিশন কিনা
+                const isNewMission = window.allMissions && window.allMissions.some(m => m.subject === subject && m.timestamp === timestamp);
+                if (isNewMission && window.groupedMissions && window.groupedMissions[subject]) {
+                    // নতুন মিশন ফোল্ডার খোলা
+                    if (typeof window.openNewMissionFolder === 'function') {
+                        window.openNewMissionFolder(subject, window.groupedMissions[subject]);
+                    } else {
+                        console.warn('openNewMissionFolder ফাংশন পাওয়া যায়নি');
+                    }
+                } else {
+                    // পুরনো ক্লাসের জন্য
+                    window.highlightedClassTimestamp = timestamp;
+                    if (typeof showSubjectPage === 'function') {
+                        showSubjectPage(subject, true);
+                    }
+                }
+            });
+        });
+    };
+
+    // সহায়ক ফাংশন: HTML escape
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // নতুন মিশন লোড হওয়ার পর টেবিল রিফ্রেশ করবে
+    const originalLoadAndRender = window.loadAndRender;
+    if (originalLoadAndRender) {
+        window.loadAndRender = async function() {
+            await originalLoadAndRender();
+            if (typeof window.renderTodayClassesSummary === 'function') {
+                window.renderTodayClassesSummary();
+            }
+        };
+    }
+
+    // সাজানোর ড্রপডাউন পরিবর্তনে টেবিল রিফ্রেশ
+    const sortSelect = document.getElementById('sort-classes');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            if (typeof window.renderTodayClassesSummary === 'function') {
+                window.renderTodayClassesSummary();
+            }
+        });
+    }
+
+    // ডেটা রিফ্রেশ বাটনে ক্লিক করলেও টেবিল আপডেট হবে
+    const refreshBtn = document.getElementById('refresh-data-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            setTimeout(() => {
+                if (typeof window.renderTodayClassesSummary === 'function') {
+                    window.renderTodayClassesSummary();
+                }
+            }, 500);
+        });
+    }
+
+    // পৃষ্ঠা লোডের পর বা মিশন আগে থেকে লোড থাকলে টেবিল রেন্ডার
+    setTimeout(() => {
+        if (typeof window.renderTodayClassesSummary === 'function') {
+            window.renderTodayClassesSummary();
+        }
+    }, 1000);
+})();
       </script>
 </body>
 </html>
