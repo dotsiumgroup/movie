@@ -12913,7 +12913,7 @@ const SPECIAL_SUBJECTS = [
   box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
 }
 </style>
-<script>
+  <script>
 (function() {
   'use strict';
 
@@ -12921,6 +12921,8 @@ const SPECIAL_SUBJECTS = [
   
   let allMissions = [];
   let groupedMissions = {};
+  let missionsFetchPromise = null;          // প্রি-লোডিং প্রমিজ
+  let missionsTableCreated = false;         // টেবিল তৈরি হয়েছে কিনা
 
   // ========== ১. ডেটা ফেচ ==========
   async function fetchMissions() {
@@ -12938,6 +12940,15 @@ const SPECIAL_SUBJECTS = [
       return [];
     }
   }
+
+  // প্রি-লোডিং শুরু (পেজ লোডের সাথে সাথেই)
+  missionsFetchPromise = (async () => {
+    const rows = await fetchMissions();
+    const { flat, grouped } = processData(rows);
+    allMissions = flat;
+    groupedMissions = grouped;
+    return { flat, grouped };
+  })();
 
   // ========== ২. ডেটা নরমালাইজ + গ্রুপ ==========
   function processData(rows) {
@@ -13002,16 +13013,16 @@ const SPECIAL_SUBJECTS = [
     tabContainer.className = 'mission-tab-container';
     tabContainer.innerHTML = `
       <div class="mission-tabs">
-        <div class="mission-tab active" data-tab="regular">📋 নিয়মিত মিশন</div>
-        <div class="mission-tab" data-tab="new">🚀 নতুন মিশন</div>
+        <div class="mission-tab" data-tab="regular">📋 নিয়মিত মিশন</div>
+        <div class="mission-tab active" data-tab="new">🚀 নতুন মিশন</div>
       </div>
     `;
     
     const contentDiv = document.createElement('div');
     contentDiv.id = 'missionTabContents';
     contentDiv.innerHTML = `
-      <div class="mission-tab-content active" id="regular-missions-content"></div>
-      <div class="mission-tab-content" id="new-missions-content">
+      <div class="mission-tab-content" id="regular-missions-content"></div>
+      <div class="mission-tab-content active" id="new-missions-content">
         <div id="newMissionsGrid" class="grid"></div>
       </div>
     `;
@@ -13046,18 +13057,15 @@ const SPECIAL_SUBJECTS = [
     
     grid.innerHTML = `<div class="empty-state"><div class="loading"></div><p class="bangla-font">মিশন লোড হচ্ছে...</p></div>`;
     
-    const rows = await fetchMissions();
-    const { flat, grouped } = processData(rows);
-    allMissions = flat;
-    groupedMissions = grouped;
-    
-    if (Object.keys(grouped).length === 0) {
+    await missionsFetchPromise;  // নিশ্চিত হই ডেটা লোড হয়েছে
+    const rows = allMissions;
+    if (Object.keys(groupedMissions).length === 0) {
       grid.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open" style="font-size:48px;opacity:0.5"></i><p class="bangla-font">কোনো মিশন নেই</p></div>`;
       return;
     }
     
     grid.innerHTML = '';
-    for (const [subject, missions] of Object.entries(grouped)) {
+    for (const [subject, missions] of Object.entries(groupedMissions)) {
       const pill = document.createElement('a');
       pill.className = 'pill new-mission-subject-link';
       pill.href = '#';
@@ -13076,38 +13084,28 @@ const SPECIAL_SUBJECTS = [
     updateCountBadges();
   }
   
-  // ========== ৫. ফোল্ডার খোলা - নতুন পদ্ধতি ==========
+  // ========== ৫. ফোল্ডার খোলা ==========
   function openNewMissionFolder(subject, missions) {
-    // সিরিয়াল অনুযায়ী সাজানো
     const sortedMissions = [...missions].sort((a,b) => a.displaySerial - b.displaySerial);
-    
-    // একটি কাস্টম পেজ দেখানোর ফাংশন কল
     showNewMissionPage(subject, sortedMissions);
   }
   
-  // নতুন পেজ দেখানোর ফাংশন (subject-page এর মতো)
   function showNewMissionPage(subject, missions) {
-    // বর্তমান স্ক্রল পজিশন সংরক্ষণ
     const missionsPage = document.getElementById('missions-page');
     const currentScroll = window.scrollY;
     
-    // মিশন পেজ লুকিয়ে ফেলা
     missionsPage.style.display = 'none';
     
-    // subject-page টি দেখানো (যা আগে থেকেই আছে)
     const subjectPage = document.getElementById('subject-page');
     subjectPage.style.display = 'block';
-    currentPageState = 'subject';
+    window.currentPageState = 'subject';
     
-    // শিরোনাম সেট করা
     const titleEl = document.getElementById('subject-title');
     titleEl.innerHTML = `<i class="fas fa-folder-open"></i> <span class="bangla-font">${subject}</span>`;
     
-    // কার্ড রেন্ডার করা (মিশনের জন্য কাস্টম)
     const gridContainer = document.getElementById('classGrid');
     renderMissionCards(missions, gridContainer);
     
-    // ব্যাক বাটনের জন্য ইভেন্ট ওভাররাইড (মিশন পৃষ্ঠায় ফিরে যেতে)
     const backBtn = document.getElementById('back-to-main');
     const originalBackHandler = backBtn.onclick;
     backBtn.onclick = (e) => {
@@ -13115,15 +13113,13 @@ const SPECIAL_SUBJECTS = [
       subjectPage.style.display = 'none';
       missionsPage.style.display = 'block';
       window.scrollTo(0, currentScroll);
-      // ব্যাক বাটনের আসল ফাংশন রিস্টোর (যদি অন্য কোথাও ব্যবহার হয়)
       backBtn.onclick = originalBackHandler;
     };
     
-    // স্ক্রল টপে নিয়ে যাওয়া
     window.scrollTo(0, 0);
   }
   
-  // ========== ৬. কার্ড রেন্ডার (ওয়েবসাইটের অন্যান্য সাবজেক্টের মতো) ==========
+  // ========== ৬. কার্ড রেন্ডার ==========
   function renderMissionCards(rows, root) {
     if (!rows || !rows.length) {
       root.innerHTML = `<div class="empty-state"><p class="bangla-font">কোনো মিশন নেই</p></div>`;
@@ -13132,7 +13128,6 @@ const SPECIAL_SUBJECTS = [
     
     root.innerHTML = '';
     
-    // কমপ্লিটেড আইটেম লোড
     let completed = [];
     try {
       completed = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
@@ -13165,8 +13160,6 @@ const SPECIAL_SUBJECTS = [
       `;
       root.appendChild(card);
     });
-    
-    console.log(`✅ ${rows.length} টি কার্ড রেন্ডার করা হয়েছে`);
   }
   
   function escapeHtml(str) {
@@ -13179,22 +13172,152 @@ const SPECIAL_SUBJECTS = [
     });
   }
   
-  // ========== ৭. কাউন্ট ব্যাজ আপডেট ==========
-  function updateCountBadges() {
-    document.querySelectorAll('.new-mission-subject-link').forEach(pill => {
-      const subject = pill.getAttribute('data-subject');
-      const count = groupedMissions[subject]?.length || 0;
-      let badge = pill.querySelector('.count-badge');
-      if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'count-badge';
-        pill.appendChild(badge);
-      }
-      badge.textContent = count;
+  // ========== ৭. কাউন্ট ব্যাজ আপডেট (মেইন পেজের মিশন ফোল্ডার) ==========
+  function updateMissionFolderBadge() {
+    const missionFolder = document.querySelector('#missions-folder');
+    if (!missionFolder) return;
+    
+    // নিয়মিত মিশনের সংখ্যা (সাবজেক্ট পেজের পুরনো মিশন)
+    let regularCount = 0;
+    if (window.allClasses && Array.isArray(window.allClasses)) {
+      regularCount = window.allClasses.filter(cls => 
+        cls && cls.subject && cls.subject.includes('(মিশন)')
+      ).length;
+    }
+    
+    // নতুন মিশনের মোট সংখ্যা
+    const newCount = allMissions.length;
+    const total = regularCount + newCount;
+    
+    let badge = missionFolder.querySelector('.count-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'count-badge';
+      missionFolder.appendChild(badge);
+    }
+    badge.textContent = total;
+  }
+
+  // ========== ৮. মেইন পেজে দ্বিতীয় টেবিল (মিশন) ==========
+  function createMissionsTableIfNeeded() {
+    if (missionsTableCreated) return;
+    const classesTable = document.querySelector('.today-classes-table');
+    if (!classesTable) return;
+    
+    const missionsTable = document.createElement('table');
+    missionsTable.id = 'today-missions-table';
+    missionsTable.className = 'today-classes-table';
+    missionsTable.style.marginTop = '-1px'; // একেবারে লেগে থাকবে
+    missionsTable.style.borderTopLeftRadius = '0';
+    missionsTable.style.borderTopRightRadius = '0';
+    missionsTable.innerHTML = `
+      <tbody id="today-missions-body"></tbody>
+    `;
+    
+    classesTable.parentNode.insertBefore(missionsTable, classesTable.nextSibling);
+    missionsTableCreated = true;
+  }
+
+  // টাইম রেঞ্জ অনুযায়ী মিশন ফিল্টার
+  function filterMissionsByRange(range) {
+    const now = new Date();
+    const today = window.getTodayDate ? window.getTodayDate() : (() => {
+      const d = new Date();
+      return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+    })();
+    
+    if (range === 'today') {
+      return allMissions.filter(m => m.date === today);
+    } else if (range === 'all') {
+      return allMissions;
+    }
+    
+    const weekAgo = new Date(now.setDate(now.getDate() - 7));
+    const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+    
+    return allMissions.filter(m => {
+      if (!m.date) return false;
+      const parts = m.date.split('-');
+      const classDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      if (range === 'week') return classDate >= weekAgo && classDate <= new Date();
+      if (range === 'month') return classDate >= monthAgo && classDate <= new Date();
+      return true;
     });
   }
-  
-  // ========== ৮. ড্যাশবোর্ড ইন্টিগ্রেশন ==========
+
+  // রেন্ডার মিশন টেবিল
+  async function renderMissionsTable(range) {
+    createMissionsTableIfNeeded();
+    const tbody = document.getElementById('today-missions-body');
+    const table = document.getElementById('today-missions-table');
+    if (!tbody || !table) return;
+    
+    // ডেটা প্রস্তুত না হলে ৫ সেকেন্ড পর্যন্ত অপেক্ষা
+    if (allMissions.length === 0) {
+      try {
+        await Promise.race([
+          missionsFetchPromise,
+          new Promise(resolve => setTimeout(resolve, 5000))
+        ]);
+      } catch(e) {}
+    }
+    
+    const filtered = filterMissionsByRange(range);
+    
+    if (filtered.length === 0) {
+      table.style.display = 'none';
+      return;
+    }
+    
+    table.style.display = 'table';
+    let html = '';
+    filtered.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    filtered.forEach(m => {
+      html += `
+        <tr data-subject="${m.subject}" data-timestamp="${m.timestamp || ''}">
+          <td><span class="subject-badge bangla-font">${escapeHtml(m.subject)}</span></td>
+          <td class="class-info bangla-font">${escapeHtml(m.title)}</td>
+          <td class="bangla-font">${m.time}</td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+    
+    // ক্লিক ইভেন্ট: ফোল্ডার খোলা
+    tbody.querySelectorAll('tr').forEach(row => {
+      row.addEventListener('click', () => {
+        const subject = row.getAttribute('data-subject');
+        const missions = groupedMissions[subject];
+        if (missions) {
+          openNewMissionFolder(subject, missions);
+        }
+      });
+    });
+  }
+
+  // ========== ৯. ওভাররাইড renderTodayClassesSummary ==========
+  const originalRender = window.renderTodayClassesSummary;
+  window.renderTodayClassesSummary = function(classes) {
+    // প্রথমে অরিজিনাল কল (ক্লাস টেবিল আপডেট)
+    if (originalRender) originalRender(classes);
+    
+    // তারপর মিশন টেবিল আপডেট
+    const range = document.getElementById('sort-classes')?.value || 'today';
+    renderMissionsTable(range).then(() => {
+      updateMissionFolderBadge();  // ব্যাজ আপডেট
+    });
+  };
+
+  // ড্রপডাউন চেঞ্জে মিশন টেবিলও রিফ্রেশ হবে (ইতিমধ্যে renderTodayClassesSummary কল হয়)
+  // আমরা শুধু ব্যাজ আপডেট নিশ্চিত করি
+  const sortSelect = document.getElementById('sort-classes');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      setTimeout(updateMissionFolderBadge, 100);
+    });
+  }
+
+  // ========== ১০. ড্যাশবোর্ড ইন্টিগ্রেশন ==========
   function integrateWithDashboard() {
     const originalGetItems = window.getItemsFromAllClasses;
     if (originalGetItems) {
@@ -13210,7 +13333,7 @@ const SPECIAL_SUBJECTS = [
     }
   }
   
-  // ========== ৯. মিশন ফোল্ডার ক্লিক ==========
+  // ========== ১১. মিশন ফোল্ডার ক্লিক ==========
   function patchMissionsFolder() {
     const folder = document.getElementById('missions-folder');
     if (folder) {
@@ -13232,7 +13355,7 @@ const SPECIAL_SUBJECTS = [
     }
   }
   
-  // ========== ১০. ট্র্যাকিং প্যাচ ==========
+  // ========== ১২. ট্র্যাকিং প্যাচ ==========
   function patchTracking() {
     const originalTrackItem = window.trackItem;
     if (originalTrackItem) {
@@ -13245,7 +13368,6 @@ const SPECIAL_SUBJECTS = [
           if (!completed.includes(id)) {
             completed.push(id);
             localStorage.setItem('alim26_dashboard_completed_items', JSON.stringify(completed));
-            console.log(`✅ নতুন মিশন কমপ্লিট: ${id}`);
           }
         } else {
           originalTrackItem(id, type);
@@ -13254,12 +13376,17 @@ const SPECIAL_SUBJECTS = [
     }
   }
   
-  // ========== ১১. ইনিশিয়ালাইজ ==========
+  // ========== ১৩. ইনিশিয়ালাইজ ==========
   function init() {
-    console.log('🚀 নিউ মিশন সিস্টেম চালু হচ্ছে (সংশোধিত)');
+    console.log('🚀 নিউ মিশন সিস্টেম চালু হচ্ছে (পরিবর্ধিত)');
     patchMissionsFolder();
     integrateWithDashboard();
     patchTracking();
+    
+    // মেইন পেজের ব্যাজ আপডেট (ডেটা আসার পর)
+    missionsFetchPromise.then(() => {
+      updateMissionFolderBadge();
+    });
     
     if (document.getElementById('missions-page')?.style.display === 'block') {
       setTimeout(() => {
@@ -13278,132 +13405,6 @@ const SPECIAL_SUBJECTS = [
   } else {
     init();
   }
-})();
-
-      // ========== আজকের ক্লাস টেবিলে নতুন মিশন যুক্ত করার প্যাচ ==========
-(function() {
-    // মূল ফাংশন সংরক্ষণ (যদি প্রয়োজন হয়)
-    const originalRenderToday = window.renderTodayClassesSummary;
-    
-    // নতুন ফাংশন যা allClasses এবং allMissions উভয় থেকে আজকের আইটেম দেখাবে
-    window.renderTodayClassesSummary = function() {
-        const today = getTodayDate(); // গ্লোবাল ফাংশন (আপনার কোডে আছে)
-        let allTodayItems = [];
-
-        // 1. allClasses থেকে আজকের ক্লাস
-        if (window.allClasses && Array.isArray(window.allClasses)) {
-            const todayClasses = window.allClasses.filter(cls => cls && cls.date === today);
-            allTodayItems.push(...todayClasses);
-        }
-
-        // 2. নতুন মিশন সিস্টেমের allMissions থেকে আজকের মিশন
-        if (window.allMissions && Array.isArray(window.allMissions)) {
-            const todayMissions = window.allMissions.filter(mission => mission && mission.date === today);
-            allTodayItems.push(...todayMissions);
-        }
-
-        const container = document.getElementById('today-classes-body');
-        if (!container) return;
-
-        if (allTodayItems.length === 0) {
-            container.innerHTML = `<tr><td colspan="3" class="bangla-font" style="text-align: center; padding: 20px;">আজকের জন্য কোন ক্লাস বা মিশন পাওয়া যায়নি</td></tr>`;
-            return;
-        }
-
-        // সময় অনুযায়ী সাজানো
-        allTodayItems.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-
-        let tableHTML = '';
-        allTodayItems.forEach(item => {
-            const subject = item.subject || 'মিশন';
-            const title = item.title || 'মিশন';
-            const time = item.time || '';
-            tableHTML += `
-                <tr data-subject="${subject}" data-timestamp="${item.timestamp || ''}">
-                    <td><span class="subject-badge bangla-font">${escapeHtml(subject)}</span></td>
-                    <td class="class-info bangla-font">${escapeHtml(title)}</td>
-                    <td class="bangla-font">${time}</td>
-                </tr>
-            `;
-        });
-        container.innerHTML = tableHTML;
-
-        // রো-তে ক্লিক ইভেন্ট
-        document.querySelectorAll('#today-classes-body tr').forEach(row => {
-            row.addEventListener('click', () => {
-                const subject = row.getAttribute('data-subject');
-                const timestamp = row.getAttribute('data-timestamp');
-                
-                // চেক করুন এটি নতুন মিশন কিনা
-                const isNewMission = window.allMissions && window.allMissions.some(m => m.subject === subject && m.timestamp === timestamp);
-                if (isNewMission && window.groupedMissions && window.groupedMissions[subject]) {
-                    // নতুন মিশন ফোল্ডার খোলা
-                    if (typeof window.openNewMissionFolder === 'function') {
-                        window.openNewMissionFolder(subject, window.groupedMissions[subject]);
-                    } else {
-                        console.warn('openNewMissionFolder ফাংশন পাওয়া যায়নি');
-                    }
-                } else {
-                    // পুরনো ক্লাসের জন্য
-                    window.highlightedClassTimestamp = timestamp;
-                    if (typeof showSubjectPage === 'function') {
-                        showSubjectPage(subject, true);
-                    }
-                }
-            });
-        });
-    };
-
-    // সহায়ক ফাংশন: HTML escape
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    // নতুন মিশন লোড হওয়ার পর টেবিল রিফ্রেশ করবে
-    const originalLoadAndRender = window.loadAndRender;
-    if (originalLoadAndRender) {
-        window.loadAndRender = async function() {
-            await originalLoadAndRender();
-            if (typeof window.renderTodayClassesSummary === 'function') {
-                window.renderTodayClassesSummary();
-            }
-        };
-    }
-
-    // সাজানোর ড্রপডাউন পরিবর্তনে টেবিল রিফ্রেশ
-    const sortSelect = document.getElementById('sort-classes');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            if (typeof window.renderTodayClassesSummary === 'function') {
-                window.renderTodayClassesSummary();
-            }
-        });
-    }
-
-    // ডেটা রিফ্রেশ বাটনে ক্লিক করলেও টেবিল আপডেট হবে
-    const refreshBtn = document.getElementById('refresh-data-btn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            setTimeout(() => {
-                if (typeof window.renderTodayClassesSummary === 'function') {
-                    window.renderTodayClassesSummary();
-                }
-            }, 500);
-        });
-    }
-
-    // পৃষ্ঠা লোডের পর বা মিশন আগে থেকে লোড থাকলে টেবিল রেন্ডার
-    setTimeout(() => {
-        if (typeof window.renderTodayClassesSummary === 'function') {
-            window.renderTodayClassesSummary();
-        }
-    }, 1000);
 })();
       </script>
 </body>
