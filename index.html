@@ -12913,7 +12913,6 @@ const SPECIAL_SUBJECTS = [
   box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
 }
 </style>
-
 <script>
 (function() {
   'use strict';
@@ -12927,14 +12926,10 @@ const SPECIAL_SUBJECTS = [
   async function fetchMissions() {
     try {
       const url = API_URL + '?nocache=' + Date.now();
-      console.log('📡 ফেচ করছি:', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log('📦 রেসপন্স:', data);
-      
       if (data && data.ok === true && Array.isArray(data.rows)) {
-        console.log(`✅ ${data.rows.length} টি মিশন পেয়েছি`);
         return data.rows;
       }
       return [];
@@ -12944,14 +12939,12 @@ const SPECIAL_SUBJECTS = [
     }
   }
 
-  // ========== ২. ডেটা নরমালাইজ + গ্রুপ (একই নামের সাবজেক্ট একত্রে) ==========
+  // ========== ২. ডেটা নরমালাইজ + গ্রুপ ==========
   function processData(rows) {
     if (!rows.length) return { flat: [], grouped: {} };
     
-    // টাইমস্ট্যাম্প অনুযায়ী সাজানো (পুরাতন থেকে নতুন)
     const sorted = [...rows].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
     
-    // ফ্ল্যাট ডেটা তৈরি
     const flat = sorted.map((row, idx) => {
       let date = '', time = '';
       try {
@@ -12965,9 +12958,7 @@ const SPECIAL_SUBJECTS = [
         time = 'সময় নেই';
       }
       
-      // সাবজেক্ট ক্লিনআপ (একই নামের জন্য)
       let subject = (row.subject || 'অন্যান্য').toString().trim();
-      
       return {
         globalId: `nm_${idx+1}`,
         subject: subject,
@@ -12981,27 +12972,18 @@ const SPECIAL_SUBJECTS = [
       };
     });
     
-    // একই নামের সাবজেক্ট অনুযায়ী গ্রুপিং
     const grouped = {};
     flat.forEach(item => {
-      if (!grouped[item.subject]) {
-        grouped[item.subject] = [];
-      }
+      if (!grouped[item.subject]) grouped[item.subject] = [];
       grouped[item.subject].push(item);
     });
     
-    // প্রতিটি গ্রুপের ভিতরে সিরিয়াল রিনাম্বারিং
     for (let subj in grouped) {
       grouped[subj].forEach((item, idx) => {
         item.displaySerial = idx + 1;
         item.globalId = `nm_${subj.replace(/[^a-z0-9]/gi, '_')}_${idx+1}`;
       });
     }
-    
-    console.log('📁 গ্রুপকৃত সাবজেক্ট:', Object.keys(grouped));
-    Object.keys(grouped).forEach(subj => {
-      console.log(`   📌 ${subj}: ${grouped[subj].length} টি মিশন`);
-    });
     
     return { flat, grouped };
   }
@@ -13015,7 +12997,6 @@ const SPECIAL_SUBJECTS = [
     const titleEl = missionsPage.querySelector('h2');
     if (!titleEl) return;
     
-    // ট্যাব কন্টেইনার
     const tabContainer = document.createElement('div');
     tabContainer.id = 'missionTabsContainer';
     tabContainer.className = 'mission-tab-container';
@@ -13026,7 +13007,6 @@ const SPECIAL_SUBJECTS = [
       </div>
     `;
     
-    // কন্টেন্ট কন্টেইনার
     const contentDiv = document.createElement('div');
     contentDiv.id = 'missionTabContents';
     contentDiv.innerHTML = `
@@ -13039,13 +13019,11 @@ const SPECIAL_SUBJECTS = [
     titleEl.parentNode.insertBefore(tabContainer, titleEl.nextSibling);
     titleEl.parentNode.insertBefore(contentDiv, tabContainer.nextSibling);
     
-    // বিদ্যমান মিশন গ্রিড সরানো
     const oldGrid = document.getElementById('missionsGrid');
     if (oldGrid) {
       document.getElementById('regular-missions-content').appendChild(oldGrid);
     }
     
-    // ট্যাব ক্লিক ইভেন্ট
     document.querySelectorAll('.mission-tab').forEach(tab => {
       tab.addEventListener('click', async (e) => {
         const which = tab.dataset.tab;
@@ -13078,7 +13056,6 @@ const SPECIAL_SUBJECTS = [
       return;
     }
     
-    // ফোল্ডার (পিল) তৈরি
     grid.innerHTML = '';
     for (const [subject, missions] of Object.entries(grouped)) {
       const pill = document.createElement('a');
@@ -13089,10 +13066,9 @@ const SPECIAL_SUBJECTS = [
         <span><i class="fas fa-folder-open"></i> <span class="bangla-font">${subject}</span></span>
         <span class="go bangla-font">খুলুন (${missions.length})</span>
       `;
-      pill.style.position = 'relative';
       pill.addEventListener('click', (e) => {
         e.preventDefault();
-        openSubjectFolder(subject, missions);
+        openNewMissionFolder(subject, missions);
       });
       grid.appendChild(pill);
     }
@@ -13100,43 +13076,51 @@ const SPECIAL_SUBJECTS = [
     updateCountBadges();
   }
   
-  // ========== ৫. ফোল্ডার খোলা (কার্ড দেখানো) ==========
-  function openSubjectFolder(subject, missions) {
-    console.log(`📂 খোলা হচ্ছে: ${subject}, মিশন সংখ্যা: ${missions.length}`);
-    
+  // ========== ৫. ফোল্ডার খোলা - নতুন পদ্ধতি ==========
+  function openNewMissionFolder(subject, missions) {
     // সিরিয়াল অনুযায়ী সাজানো
     const sortedMissions = [...missions].sort((a,b) => a.displaySerial - b.displaySerial);
     
-    // টেম্প স্টোরেজ
-    window._currentNewMissions = sortedMissions;
-    window._currentNewSubject = subject;
+    // একটি কাস্টম পেজ দেখানোর ফাংশন কল
+    showNewMissionPage(subject, sortedMissions);
+  }
+  
+  // নতুন পেজ দেখানোর ফাংশন (subject-page এর মতো)
+  function showNewMissionPage(subject, missions) {
+    // বর্তমান স্ক্রল পজিশন সংরক্ষণ
+    const missionsPage = document.getElementById('missions-page');
+    const currentScroll = window.scrollY;
     
-    // বিদ্যমান renderCards ফাংশন ওভাররাইড
-    const originalRender = window.renderCards;
+    // মিশন পেজ লুকিয়ে ফেলা
+    missionsPage.style.display = 'none';
     
-    window.renderCards = function(rows, root) {
-      if (window._currentNewMissions && rows === window._currentNewMissions) {
-        renderMissionCards(rows, root);
-        delete window._currentNewMissions;
-        delete window._currentNewSubject;
-      } else if (originalRender) {
-        originalRender(rows, root);
-      }
+    // subject-page টি দেখানো (যা আগে থেকেই আছে)
+    const subjectPage = document.getElementById('subject-page');
+    subjectPage.style.display = 'block';
+    currentPageState = 'subject';
+    
+    // শিরোনাম সেট করা
+    const titleEl = document.getElementById('subject-title');
+    titleEl.innerHTML = `<i class="fas fa-folder-open"></i> <span class="bangla-font">${subject}</span>`;
+    
+    // কার্ড রেন্ডার করা (মিশনের জন্য কাস্টম)
+    const gridContainer = document.getElementById('classGrid');
+    renderMissionCards(missions, gridContainer);
+    
+    // ব্যাক বাটনের জন্য ইভেন্ট ওভাররাইড (মিশন পৃষ্ঠায় ফিরে যেতে)
+    const backBtn = document.getElementById('back-to-main');
+    const originalBackHandler = backBtn.onclick;
+    backBtn.onclick = (e) => {
+      e.preventDefault();
+      subjectPage.style.display = 'none';
+      missionsPage.style.display = 'block';
+      window.scrollTo(0, currentScroll);
+      // ব্যাক বাটনের আসল ফাংশন রিস্টোর (যদি অন্য কোথাও ব্যবহার হয়)
+      backBtn.onclick = originalBackHandler;
     };
     
-    // সাবজেক্ট পেজ দেখানো
-    if (typeof showSubjectPage === 'function') {
-      showSubjectPage(`📁 ${subject}`, false);
-    } else {
-      console.error('showSubjectPage ফাংশন পাওয়া যায়নি');
-      // ফ্যালব্যাক: কনসোলে দেখানো
-      alert('সাবজেক্ট পেজ খুলতে সমস্যা হচ্ছে');
-    }
-    
-    // 2 সেকেন্ড পর রিস্টোর
-    setTimeout(() => {
-      window.renderCards = originalRender;
-    }, 2000);
+    // স্ক্রল টপে নিয়ে যাওয়া
+    window.scrollTo(0, 0);
   }
   
   // ========== ৬. কার্ড রেন্ডার (ওয়েবসাইটের অন্যান্য সাবজেক্টের মতো) ==========
@@ -13230,7 +13214,6 @@ const SPECIAL_SUBJECTS = [
   function patchMissionsFolder() {
     const folder = document.getElementById('missions-folder');
     if (folder) {
-      // পুরনো ইভেন্ট রিমুভ করে নতুন যোগ
       const newFolder = folder.cloneNode(true);
       folder.parentNode.replaceChild(newFolder, folder);
       
@@ -13241,7 +13224,6 @@ const SPECIAL_SUBJECTS = [
         }
         setTimeout(() => {
           setupTabs();
-          // যদি আগে থেকে ডেটা না থাকে তবে লোড করবে
           if (allMissions.length === 0) {
             loadAndRender();
           }
@@ -13250,7 +13232,7 @@ const SPECIAL_SUBJECTS = [
     }
   }
   
-  // ========== ১০. ট্র্যাকিং প্যাচ (নতুন মিশন কমপ্লিট হলে) ==========
+  // ========== ১০. ট্র্যাকিং প্যাচ ==========
   function patchTracking() {
     const originalTrackItem = window.trackItem;
     if (originalTrackItem) {
@@ -13274,12 +13256,11 @@ const SPECIAL_SUBJECTS = [
   
   // ========== ১১. ইনিশিয়ালাইজ ==========
   function init() {
-    console.log('🚀 নিউ মিশন সিস্টেম চালু হচ্ছে...');
+    console.log('🚀 নিউ মিশন সিস্টেম চালু হচ্ছে (সংশোধিত)');
     patchMissionsFolder();
     integrateWithDashboard();
     patchTracking();
     
-    // যদি মিশন পেজ আগে থেকে ওপেন থাকে
     if (document.getElementById('missions-page')?.style.display === 'block') {
       setTimeout(() => {
         setupTabs();
@@ -13289,7 +13270,6 @@ const SPECIAL_SUBJECTS = [
       }, 100);
     }
     
-    // গ্লোবাল রিফ্রেশ ফাংশন
     window.refreshNewMissions = loadAndRender;
   }
   
@@ -13299,6 +13279,6 @@ const SPECIAL_SUBJECTS = [
     init();
   }
 })();
-  </script>                      
+      </script>
 </body>
 </html>
