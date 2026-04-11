@@ -13000,8 +13000,8 @@ const SPECIAL_SUBJECTS = [
     tabContainer.className = 'mission-tab-container';
     tabContainer.innerHTML = `
       <div class="mission-tabs">
-        <div class="mission-tab" data-tab="regular">📋 নিয়মিত মিশন</div>
-        <div class="mission-tab active" data-tab="new">🚀 নতুন মিশন</div>
+        <div class="mission-tab" data-tab="regular">📋 মিশন L1</div>
+        <div class="mission-tab active" data-tab="new">🚀 মিশন L2</div>
       </div>
     `;
     
@@ -13194,14 +13194,14 @@ const SPECIAL_SUBJECTS = [
     }
   }
   
-  // ========== পরিবর্তন ২: মেন পেজের মিশন ফোল্ডারের ব্যাজে '⚡' দেখানো ==========
+  // ========== পরিবর্তন ২: মেন পেজের মিশন ফোল্ডারের ব্যাজে 'এক্সট্রা+' দেখানো ==========
   function patchMissionsFolder() {
     const folder = document.getElementById('missions-folder');
     if (folder) {
       const newFolder = folder.cloneNode(true);
       folder.parentNode.replaceChild(newFolder, folder);
       
-      // ব্যাজ পরিবর্তন করা (সংখ্যার পরিবর্তে ⚡)
+      // ব্যাজ পরিবর্তন করা (সংখ্যার পরিবর্তে এক্সট্রা+)
       function updateMissionFolderBadge() {
         let badge = newFolder.querySelector('.count-badge');
         if (!badge) {
@@ -13209,7 +13209,7 @@ const SPECIAL_SUBJECTS = [
           badge.className = 'count-badge';
           newFolder.appendChild(badge);
         }
-        badge.textContent = '⚡';   // সংখ্যার বদলে বজ্র চিহ্ন
+        badge.textContent = 'এক্সট্রা+';   // সংখ্যার বদলে বজ্র চিহ্ন
         badge.style.background = 'linear-gradient(135deg, #ffcc00, #ffaa00)';
         badge.style.color = '#000';
         badge.style.fontSize = '14px';
@@ -13224,8 +13224,8 @@ const SPECIAL_SUBJECTS = [
         mutations.forEach(function(mutation) {
           if (mutation.type === 'childList' || mutation.type === 'subtree') {
             const badge = newFolder.querySelector('.count-badge');
-            if (badge && badge.textContent !== '⚡') {
-              badge.textContent = '⚡';
+            if (badge && badge.textContent !== 'এক্সট্রা+') {
+              badge.textContent = 'এক্সট্রা+';
             }
           }
         });
