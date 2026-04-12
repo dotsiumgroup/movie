@@ -13686,5 +13686,136 @@ const SPECIAL_SUBJECTS = [
   }
 })();
 </script>
+      <!-- ========== ড্রাইভ প্লেয়ারে ডাউনলোড বাটন (কোনো পূর্বের কোড পরিবর্তন ছাড়া) ========== -->
+<script>
+(function() {
+    'use strict';
+
+    // স্টাইল ইনজেক্ট করা (প্রয়োজনীয় ডিজাইন)
+    const style = document.createElement('style');
+    style.textContent = `
+        #drive-download-btn {
+            position: fixed;
+            top: 6px;
+            left: 12px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: none;
+            color: #fff;
+            font-family: sans-serif;
+            z-index: 15000;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.15s;
+            user-select: none;
+        }
+        #drive-download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 1);
+        }
+        #drive-download-btn .small {
+            font-size: 10px;
+            opacity: 0.85;
+            line-height: 12px;
+        }
+        #drive-download-btn .big {
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 15px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ড্রাইভ আইডি এক্সট্রাক্টর
+    function extractDriveId(url) {
+        if (!url) return null;
+        // প্যাটার্ন: /d/ID, id=ID, /file/d/ID ইত্যাদি
+        const patterns = [
+            /\/d\/([a-zA-Z0-9_-]+)/,
+            /[?&]id=([a-zA-Z0-9_-]+)/,
+            /\/file\/d\/([a-zA-Z0-9_-]+)/
+        ];
+        for (let p of patterns) {
+            const match = url.match(p);
+            if (match) return match[1];
+        }
+        // ফলব্যাক: সাধারণ গুগল ড্রাইভ আইডি দৈর্ঘ্য ≥ 25 ক্যারেক্টার
+        const generic = url.match(/[-\w]{25,}/);
+        return generic ? generic[0] : null;
+    }
+
+    // বাটন তৈরি ও যুক্ত করার ফাংশন
+    function addDownloadButton() {
+        const drivePage = document.getElementById('drive-player-page');
+        if (!drivePage) return;
+
+        // ইতিমধ্যে বাটন থাকলে দ্বিতীয়বার তৈরি নয়
+        if (document.getElementById('drive-download-btn')) return;
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.id = 'drive-download-btn';
+        downloadBtn.innerHTML = `
+            <div class="small">Download</div>
+            <div class="big">File</div>
+        `;
+
+        downloadBtn.onclick = function() {
+            let fileId = null;
+
+            // ১. গ্লোবাল driveUrl থেকে (যদি সেট করা থাকে)
+            if (window.driveUrl) {
+                fileId = extractDriveId(window.driveUrl);
+            }
+
+            // ২. iframe এর src থেকে
+            if (!fileId) {
+                const iframe = document.querySelector('#drive-player-page iframe');
+                if (iframe && iframe.src) {
+                    fileId = extractDriveId(iframe.src);
+                }
+            }
+
+            if (fileId) {
+                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                window.open(downloadUrl, '_blank');
+            } else {
+                alert('ডাউনলোড লিংক তৈরি করা সম্ভব হয়নি।');
+            }
+        };
+
+        drivePage.appendChild(downloadBtn);
+    }
+
+    // ড্রাইভ প্লেয়ার পেজ দেখানোর সাথে সাথে বাটন যুক্ত করার জন্য MutationObserver
+    const drivePage = document.getElementById('drive-player-page');
+    if (drivePage) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mut) {
+                if (mut.type === 'attributes' && mut.attributeName === 'style') {
+                    if (drivePage.style.display === 'block') {
+                        addDownloadButton();
+                    }
+                }
+            });
+        });
+        observer.observe(drivePage, { attributes: true });
+
+        // যদি ইতিমধ্যে দৃশ্যমান থাকে
+        if (drivePage.style.display === 'block') {
+            addDownloadButton();
+        }
+    }
+
+    // পেজ লোডের পরও একবার চেক করা (নিরাপত্তার জন্য)
+    window.addEventListener('load', function() {
+        if (drivePage && drivePage.style.display === 'block') {
+            addDownloadButton();
+        }
+    });
+
+})();
+  </script>
   </body>
 </html>
