@@ -13348,5 +13348,307 @@ const SPECIAL_SUBJECTS = [
   });
 })();
   </script>
+
+  <!-- ========== স্মার্ট ব্যাক নেভিগেশন সিস্টেম ========== -->
+<script>
+(function() {
+    'use strict';
+
+    // কনফিগারেশন: কোন প্যারেন্টগুলো সরাসরি মেইন পেজে যাবে আর কোনগুলো আগের ফোল্ডারে ফিরবে
+    const PARENT_BEHAVIOR = {
+        // এই ফোল্ডারগুলো থেকে সাবজেক্টে গেলে ব্যাক করলে আগের ফোল্ডারে ফিরবে
+        'classes': { backTo: 'classes', pageId: 'classes-page' },
+        'missions': { backTo: 'missions', pageId: 'missions-page' },
+        'documents': { backTo: 'documents', pageId: 'documents-page' },
+        // নতুন মিশন সিস্টেমের জন্যও একই আচরণ
+        'new-missions': { backTo: 'missions', pageId: 'missions-page' },
+        
+        // এই সোর্সগুলো থেকে সরাসরি মেইন পেজে যাবে
+        'main': { backTo: 'main', pageId: 'main-page' },
+        'exam': { backTo: 'main', pageId: 'main-page' },
+        'result': { backTo: 'main', pageId: 'main-page' },
+        'suggestion': { backTo: 'main', pageId: 'main-page' },
+        'unknown': { backTo: 'main', pageId: 'main-page' }
+    };
+
+    // বর্তমান স্টেট সংরক্ষণ
+    let navigationState = {
+        currentParent: 'main',        // বর্তমান প্যারেন্ট (main, classes, missions, documents)
+        parentScroll: 0,              // প্যারেন্ট পেজের স্ক্রল পজিশন
+        subjectHistory: []            // নেভিগেশন হিস্ট্রি (ভবিষ্যতের জন্য)
+    };
+
+    // পেজ ভিজিবিলিটি চেক করার হেল্পার
+    function isPageVisible(pageId) {
+        const page = document.getElementById(pageId);
+        return page && page.style.display === 'block';
+    }
+
+    // বর্তমান কোন প্যারেন্ট থেকে এসেছি তা নির্ধারণ
+    function detectCurrentParent() {
+        if (isPageVisible('classes-page')) return 'classes';
+        if (isPageVisible('missions-page')) return 'missions';
+        if (isPageVisible('documents-page')) return 'documents';
+        if (isPageVisible('main-page')) return 'main';
+        
+        // সাবজেক্টের সোর্স চেক
+        const subjectTitle = document.getElementById('subject-title');
+        if (subjectTitle && isPageVisible('subject-page')) {
+            const titleText = subjectTitle.textContent || '';
+            if (titleText.includes('ইক্সাম') || titleText.includes('পরীক্ষা')) return 'exam';
+            if (titleText.includes('রেজাল্ট')) return 'result';
+            if (titleText.includes('সাজেশন্স')) return 'suggestion';
+            
+            // যদি নতুন মিশন সিস্টেম থেকে খোলা হয় (চেক করার উপায়)
+            if (window.currentMissionParent === 'missions') {
+                return 'new-missions';
+            }
+        }
+        
+        return 'unknown';
+    }
+
+    // প্যারেন্ট পেজে ফিরে যাওয়া
+    function goBackToParent(parentType) {
+        const behavior = PARENT_BEHAVIOR[parentType] || PARENT_BEHAVIOR['unknown'];
+        
+        // সব পেজ হাইড
+        const pages = ['main-page', 'subject-page', 'classes-page', 'missions-page', 'documents-page', 'video-player-page', 'drive-player-page'];
+        pages.forEach(id => {
+            const page = document.getElementById(id);
+            if (page) page.style.display = 'none';
+        });
+        
+        // টার্গেট পেজ শো
+        const targetPage = document.getElementById(behavior.pageId);
+        if (targetPage) {
+            targetPage.style.display = 'block';
+            
+            // স্ক্রল পজিশন রিস্টোর
+            setTimeout(() => {
+                if (behavior.backTo === 'main') {
+                    window.scrollTo(0, window.mainScrollPosition || 0);
+                } else if (behavior.backTo === 'classes') {
+                    window.scrollTo(0, window.classesScrollPosition || 0);
+                } else if (behavior.backTo === 'missions') {
+                    window.scrollTo(0, window.missionsScrollPosition || 0);
+                } else if (behavior.backTo === 'documents') {
+                    window.scrollTo(0, window.documentsScrollPosition || 0);
+                }
+            }, 10);
+            
+            // গ্লোবাল স্টেট আপডেট
+            if (typeof window.currentPageState !== 'undefined') {
+                window.currentPageState = behavior.backTo;
+            }
+        }
+        
+        navigationState.currentParent = behavior.backTo;
+    }
+
+    // সাবজেক্ট পেজ খোলার সময় প্যারেন্ট সংরক্ষণ
+    function patchSubjectPageOpen() {
+        // showSubjectPage ফাংশন ওভাররাইড
+        const originalShowSubject = window.showSubjectPage;
+        if (originalShowSubject) {
+            window.showSubjectPage = function(subject, from, fromTable) {
+                // প্যারেন্ট নির্ধারণ
+                let parent = 'main';
+                if (from === 'classes') parent = 'classes';
+                else if (from === 'missions') parent = 'missions';
+                else if (from === 'documents') parent = 'documents';
+                else if (from === 'new-missions') parent = 'new-missions';
+                
+                // স্ক্রল পজিশন সংরক্ষণ
+                if (parent === 'classes') window.classesScrollPosition = window.scrollY;
+                else if (parent === 'missions') window.missionsScrollPosition = window.scrollY;
+                else if (parent === 'documents') window.documentsScrollPosition = window.scrollY;
+                else if (parent === 'main') window.mainScrollPosition = window.scrollY;
+                
+                navigationState.currentParent = parent;
+                
+                // মূল ফাংশন কল (সঠিক প্যারামিটার সহ)
+                if (fromTable !== undefined) {
+                    return originalShowSubject.call(this, subject, from, fromTable);
+                } else {
+                    return originalShowSubject.call(this, subject, from);
+                }
+            };
+        }
+
+        // নতুন মিশন সিস্টেমের openNewMissionFolder ওভাররাইড
+        const originalOpenMission = window.openNewMissionFolder;
+        if (originalOpenMission) {
+            window.openNewMissionFolder = function(subject, missions) {
+                // প্যারেন্ট হিসেবে missions সেট
+                navigationState.currentParent = 'new-missions';
+                window.missionsScrollPosition = window.scrollY;
+                window.currentMissionParent = 'missions';
+                
+                // মূল ফাংশন কল
+                return originalOpenMission.call(this, subject, missions);
+            };
+        }
+    }
+
+    // "মেন পেজ" বাটনের আচরণ পরিবর্তন
+    function patchBackButton() {
+        const backBtn = document.getElementById('back-to-main');
+        if (!backBtn) return;
+
+        // আগের ইভেন্ট লিসেনার রিমুভ
+        const newBtn = backBtn.cloneNode(true);
+        backBtn.parentNode.replaceChild(newBtn, backBtn);
+
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // বর্তমান প্যারেন্ট নির্ধারণ
+            const currentParent = detectCurrentParent();
+            const behavior = PARENT_BEHAVIOR[currentParent] || PARENT_BEHAVIOR['unknown'];
+            
+            // যদি সাবজেক্ট পেজে থাকি
+            if (isPageVisible('subject-page')) {
+                // প্যারেন্ট অনুযায়ী ব্যাক
+                goBackToParent(navigationState.currentParent || currentParent);
+            } 
+            // যদি ফোল্ডার পেজে থাকি (ক্লাস/মিশন/ডকুমেন্ট)
+            else if (isPageVisible('classes-page') || isPageVisible('missions-page') || isPageVisible('documents-page')) {
+                // সরাসরি মেইন পেজে
+                const pages = ['main-page', 'subject-page', 'classes-page', 'missions-page', 'documents-page'];
+                pages.forEach(id => {
+                    const page = document.getElementById(id);
+                    if (page) page.style.display = 'none';
+                });
+                
+                const mainPage = document.getElementById('main-page');
+                if (mainPage) {
+                    mainPage.style.display = 'block';
+                    setTimeout(() => {
+                        window.scrollTo(0, window.mainScrollPosition || 0);
+                    }, 10);
+                    
+                    if (typeof window.currentPageState !== 'undefined') {
+                        window.currentPageState = 'main';
+                    }
+                }
+                
+                navigationState.currentParent = 'main';
+            }
+            // মেইন পেজে থাকলে কিছু না
+        });
+    }
+
+    // পেজ চেঞ্জ মনিটর করে ব্যাক বাটন আপডেট
+    function observePageChanges() {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    // পেজ ভিজিবিলিটি চেঞ্জ হলে ব্যাক বাটন রি-প্যাচ
+                    setTimeout(patchBackButton, 50);
+                }
+            });
+        });
+        
+        const pages = ['main-page', 'subject-page', 'classes-page', 'missions-page', 'documents-page'];
+        pages.forEach(id => {
+            const page = document.getElementById(id);
+            if (page) observer.observe(page, { attributes: true, attributeFilter: ['style'] });
+        });
+    }
+
+    // সাবজেক্ট লিংকগুলোর ক্লিক ট্র্যাক করে প্যারেন্ট সেট
+    function patchSubjectLinks() {
+        // ক্লাস পেজের সাবজেক্ট লিংক
+        document.querySelectorAll('#classesGrid .subject-link-class, .subject-link-class').forEach(link => {
+            link.addEventListener('click', function(e) {
+                navigationState.currentParent = 'classes';
+                window.classesScrollPosition = window.scrollY;
+            });
+        });
+        
+        // মিশন পেজের সাবজেক্ট লিংক
+        document.querySelectorAll('#missionsGrid .subject-link-mission, .subject-link-mission').forEach(link => {
+            link.addEventListener('click', function(e) {
+                navigationState.currentParent = 'missions';
+                window.missionsScrollPosition = window.scrollY;
+            });
+        });
+        
+        // ডকুমেন্ট পেজের সাবজেক্ট লিংক
+        document.querySelectorAll('#documentsGrid .subject-link-document, .subject-link-document').forEach(link => {
+            link.addEventListener('click', function(e) {
+                navigationState.currentParent = 'documents';
+                window.documentsScrollPosition = window.scrollY;
+            });
+        });
+        
+        // নতুন মিশন সিস্টেমের লিংক (ডাইনামিক্যালি তৈরি হয়, তাই ইভেন্ট ডেলিগেশন)
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('.new-mission-subject-link');
+            if (link) {
+                navigationState.currentParent = 'new-missions';
+                window.missionsScrollPosition = window.scrollY;
+                window.currentMissionParent = 'missions';
+            }
+        });
+    }
+
+    // ব্রাউজার ব্যাক বাটন হ্যান্ডলিং
+    function handleBrowserBack() {
+        window.addEventListener('popstate', function(e) {
+            const currentParent = detectCurrentParent();
+            
+            if (isPageVisible('subject-page')) {
+                // সাবজেক্ট পেজ থেকে প্যারেন্টে ফিরব
+                goBackToParent(navigationState.currentParent || currentParent);
+                // হিস্ট্রি স্টেট ঠিক রাখা
+                history.pushState({ page: navigationState.currentParent }, '');
+            }
+        });
+    }
+
+    // ইনিশিয়ালাইজ
+    function init() {
+        console.log('🧭 স্মার্ট ব্যাক নেভিগেশন সিস্টেম চালু হচ্ছে...');
+        
+        // গ্লোবাল স্ক্রল ভেরিয়েবল ইনিশিয়ালাইজ
+        window.mainScrollPosition = window.mainScrollPosition || 0;
+        window.classesScrollPosition = window.classesScrollPosition || 0;
+        window.missionsScrollPosition = window.missionsScrollPosition || 0;
+        window.documentsScrollPosition = window.documentsScrollPosition || 0;
+        
+        // ফাংশন প্যাচিং
+        patchSubjectPageOpen();
+        patchBackButton();
+        patchSubjectLinks();
+        
+        // অবজারভার সেটআপ
+        observePageChanges();
+        
+        // ব্রাউজার ব্যাক
+        handleBrowserBack();
+        
+        // স্ক্রল পজিশন ট্র্যাকিং
+        window.addEventListener('scroll', function() {
+            if (isPageVisible('main-page')) window.mainScrollPosition = window.scrollY;
+            else if (isPageVisible('classes-page')) window.classesScrollPosition = window.scrollY;
+            else if (isPageVisible('missions-page')) window.missionsScrollPosition = window.scrollY;
+            else if (isPageVisible('documents-page')) window.documentsScrollPosition = window.scrollY;
+        }, { passive: true });
+        
+        console.log('✅ স্মার্ট ব্যাক নেভিগেশন সিস্টেম সক্রিয়');
+    }
+
+    // DOM রেডি হলে শুরু
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+</script>
+<!-- ========== স্মার্ট ব্যাক নেভিগেশন সিস্টেম শেষ ========== -->
 </body>
 </html>
