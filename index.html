@@ -13599,5 +13599,85 @@ const SPECIAL_SUBJECTS = [
 
 })();
 </script>
+  <script>
+(function() {
+    'use strict';
+
+    // মূল closeSubjectPage ফাংশন সংরক্ষণ
+    const originalCloseSubjectPage = window.closeSubjectPage;
+
+    // নতুন closeSubjectPage ফাংশন
+    window.closeSubjectPage = function() {
+        // বর্তমান সাবজেক্টের নাম (যেমন: "কুরআন মাজীদ (ক্লাস)")
+        const currentSubj = window.currentSubject || '';
+        
+        // চিহ্নিতকারী স্ট্রিং
+        const hasClassTag = currentSubj.includes('(ক্লাস)');
+        const hasMissionTag = currentSubj.includes('(মিশন)');
+        const hasDocumentTag = currentSubj.includes('(ডকুমেন্ট)');
+        
+        // নতুন মিশন (নতুন মিশন ট্যাব থেকে খোলা) চিহ্নিতকরণ
+        const isNewMission = window.currentNewMissionSubject && 
+                             (window.currentNewMissionSubject === currentSubj || 
+                              currentSubj.includes('[নতুন মিশন]'));
+        
+        // ফোল্ডারের ধরণ অনুযায়ী পৃষ্ঠায় ফেরত পাঠানো
+        if (hasClassTag) {
+            // ক্লাস পৃষ্ঠায় যাবে
+            if (typeof showClassesPage === 'function') {
+                showClassesPage();
+            } else {
+                // ব্যাকআপ: মেন পেজ
+                originalCloseSubjectPage();
+            }
+        } 
+        else if (hasMissionTag || isNewMission) {
+            // মিশন পৃষ্ঠায় যাবে
+            if (typeof showMissionsPage === 'function') {
+                showMissionsPage();
+            } else {
+                originalCloseSubjectPage();
+            }
+        } 
+        else if (hasDocumentTag) {
+            // ডকুমেন্ট পৃষ্ঠায় যাবে
+            if (typeof showDocumentsPage === 'function') {
+                showDocumentsPage();
+            } else {
+                originalCloseSubjectPage();
+            }
+        } 
+        else {
+            // অন্যথায় পূর্বের নিয়ম অনুযায়ী ফিরবে
+            originalCloseSubjectPage();
+        }
+        
+        // নতুন মিশন ফ্ল্যাগ রিসেট
+        if (isNewMission) {
+            window.currentNewMissionSubject = null;
+        }
+    };
+
+    // বিদ্যমান "মেন পেজ" বাটন যদি কোনো কারণে সরাসরি ক্লিক ইভেন্টে closeSubjectPage কল না করে,
+    // তাহলে আমরা নিশ্চিত করি যে বাটনের ক্লিক ইভেন্টে আমাদের নতুন ফাংশন কল হবে
+    const backButton = document.getElementById('back-to-main');
+    if (backButton) {
+        // বাটনের বিদ্যমান ক্লিক ইভেন্ট সরিয়ে আমাদের ফাংশন সেট করি
+        const newBtn = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBtn, backButton);
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (typeof window.closeSubjectPage === 'function') {
+                window.closeSubjectPage();
+            } else {
+                // ব্যাকআপ
+                if (typeof returnToMainPage === 'function') returnToMainPage();
+            }
+        });
+    }
+
+    console.log('✅ স্মার্ট ব্যাক বাটন সিস্টেম সক্রিয় (ক্লাস/মিশন/ডকুমেন্ট অনুযায়ী)');
+})();
+  </script>
 </body>
 </html>
