@@ -13600,7 +13600,7 @@ const SPECIAL_SUBJECTS = [
 })();
 </script>
   <script>
-    // ========== ডায়নামিক ব্যাক বাটন (সাবজেক্ট পৃষ্ঠা) ==========
+    // ========== ডায়নামিক ব্যাক বাটন (সাবজেক্ট পৃষ্ঠা) – ফিক্সড ভার্সন ==========
 (function() {
   'use strict';
 
@@ -13613,69 +13613,76 @@ const SPECIAL_SUBJECTS = [
 
   function getSubjectNameFromTitle() {
     if (!subjectTitleEl) return '';
-    // <h2>-এর ভেতর থেকে বাংলা স্প্যানের টেক্সট বের করা
     const span = subjectTitleEl.querySelector('.bangla-font');
     return span ? span.textContent.trim() : '';
   }
 
   function updateBackButton() {
     if (!subjectPage || !backButton || !subjectTitleEl) return;
-    
-    // শুধুমাত্র যখন সাবজেক্ট পৃষ্ঠা দৃশ্যমান
     if (subjectPage.style.display !== 'block') return;
 
     const subject = getSubjectNameFromTitle();
     if (!subject) return;
 
-    const parent = window.parentOfSubject || 'main'; // আগের স্ক্রিপ্ট থেকে সেট করা
-
+    // ** গুরুত্বপূর্ণ: parentOfSubject কে প্রাধান্য দিন **
+    const parent = window.parentOfSubject || 'main';
     let targetPage = 'main';
     let buttonText = 'মেন পেজ';
 
-    // বিশেষ ফোল্ডার চেক
+    // বিশেষ ফোল্ডার চেক (এক্ষেত্রে parent উপেক্ষা করে মেন পেজ)
     const isSpecial = SPECIAL_SUBJECTS.some(s => subject.includes(s) || subject === s);
-    
     if (isSpecial) {
       targetPage = 'main';
       buttonText = 'মেন পেজ';
-    } else {
-      // প্যাটার্ন ও parentOfSubject অনুযায়ী সিদ্ধান্ত
-      if (subject.includes('(ক্লাস)') || parent === 'classes') {
-        targetPage = 'classes';
-        buttonText = 'ক্লাস পেজ';
-      } else if (subject.includes('(মিশন)') || parent === 'missions') {
+    } 
+    // প্রথমে parent দিয়ে সিদ্ধান্ত নিন (এটি সবচেয়ে নির্ভরযোগ্য)
+    else if (parent === 'classes') {
+      targetPage = 'classes';
+      buttonText = 'ক্লাস পেজ';
+    } else if (parent === 'missions') {
+      targetPage = 'missions';
+      buttonText = 'মিশন পেজ';
+    } else if (parent === 'documents') {
+      targetPage = 'documents';
+      buttonText = 'ডকুমেন্ট পেজ';
+    }
+    // parent না থাকলে subject স্ট্রিং বিশ্লেষণ
+    else {
+      if (subject.includes('(মিশন)')) {
         targetPage = 'missions';
         buttonText = 'মিশন পেজ';
-      } else if (subject.includes('(ডকুমেন্ট)') || parent === 'documents') {
+      } else if (subject.includes('(ডকুমেন্ট)')) {
         targetPage = 'documents';
         buttonText = 'ডকুমেন্ট পেজ';
+      } else if (subject.includes('(ক্লাস)')) {
+        targetPage = 'classes';
+        buttonText = 'ক্লাস পেজ';
       } else {
         targetPage = 'main';
         buttonText = 'মেন পেজ';
       }
     }
 
-    // ব্যাক বাটনের টেক্সট আপডেট (আগের আইকন রেখে)
+    // ব্যাক বাটন আপডেট
     const icon = backButton.querySelector('i');
     const span = backButton.querySelector('.bangla-font');
     if (span) {
       span.textContent = buttonText;
     } else {
-      // যদি স্প্যান না থাকে (ফলব্যাক)
       backButton.innerHTML = `<i class="fas fa-arrow-left"></i> <span class="bangla-font">${buttonText}</span>`;
     }
 
-    // onclick হ্যান্ডলার প্রতিস্থাপন (পুরনোটি সরিয়ে নতুন সেট)
+    // পুরনো ইভেন্ট সরিয়ে নতুন বাটন তৈরি
     const newButton = backButton.cloneNode(true);
     backButton.parentNode.replaceChild(newButton, backButton);
     
     newButton.addEventListener('click', function(e) {
       e.preventDefault();
       
-      // সাবজেক্ট পৃষ্ঠা বন্ধ
+      // সাবজেক্ট পৃষ্ঠা লুকান
       if (subjectPage) subjectPage.style.display = 'none';
       
-      // টার্গেট পৃষ্ঠা দেখানো
+      // টার্গেট পৃষ্ঠা দেখান
       if (targetPage === 'classes' && typeof showClassesPage === 'function') {
         showClassesPage();
       } else if (targetPage === 'missions' && typeof showMissionsPage === 'function') {
@@ -13683,32 +13690,26 @@ const SPECIAL_SUBJECTS = [
       } else if (targetPage === 'documents' && typeof showDocumentsPage === 'function') {
         showDocumentsPage();
       } else {
-        // main পেজ
         const mainPage = document.getElementById('main-page');
         if (mainPage) {
           mainPage.style.display = 'block';
           window.currentPageState = 'main';
-          // স্ক্রল পজিশন পুনরুদ্ধার
           if (typeof window.mainScrollPosition !== 'undefined') {
             window.scrollTo(0, window.mainScrollPosition || 0);
           }
         }
       }
       
-      // parentOfSubject রিসেট (ঐচ্ছিক)
-      window.parentOfSubject = 'main';
-      
-      // ব্রাউজার হিস্টরি আপডেট (ঐচ্ছিক)
+      window.parentOfSubject = 'main'; // রিসেট
       if (window.history && window.history.pushState) {
         history.pushState({ page: targetPage }, '');
       }
     });
 
-    // গ্লোবাল রেফারেন্স আপডেট (অন্য স্ক্রিপ্ট যাতে নতুন বাটন পায়)
     window.backButton = newButton;
   }
 
-  // মিউটেশন অবজারভার দিয়ে সাবজেক্ট পৃষ্ঠার প্রদর্শন ও শিরোনাম পরিবর্তন মনিটর
+  // মিউটেশন অবজারভার
   const observer = new MutationObserver(() => {
     if (subjectPage && subjectPage.style.display === 'block') {
       updateBackButton();
@@ -13717,26 +13718,26 @@ const SPECIAL_SUBJECTS = [
 
   if (subjectPage) {
     observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
-    observer.observe(subjectTitleEl, { childList: true, subtree: true, characterData: true });
+    if (subjectTitleEl) {
+      observer.observe(subjectTitleEl, { childList: true, subtree: true, characterData: true });
+    }
   }
 
-  // শুরুতেই একবার চেক (পৃষ্ঠা লোডে সাবজেক্ট পেজ ওপেন থাকলে)
   if (subjectPage && subjectPage.style.display === 'block') {
     updateBackButton();
   }
 
-  // showSubjectPage কলের পরও যাতে আপডেট হয় (ইভেন্ট লুপের পর)
+  // showSubjectPage ওভাররাইড
   const originalShowSubject = window.showSubjectPage;
   if (typeof originalShowSubject === 'function') {
     window.showSubjectPage = function(...args) {
       originalShowSubject.apply(this, args);
-      // DOM আপডেটের জন্য অপেক্ষা
       setTimeout(updateBackButton, 50);
     };
   }
 
-  console.log('✅ ডায়নামিক ব্যাক বাটন সিস্টেম চালু হয়েছে');
+  console.log('✅ ডায়নামিক ব্যাক বাটন (ফিক্সড) চালু হয়েছে');
 })();
-</script>
+  </script>
 </body>
 </html>
