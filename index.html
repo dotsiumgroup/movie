@@ -13599,145 +13599,122 @@ const SPECIAL_SUBJECTS = [
 
 })();
 </script>
+  
   <script>
-    // ========== ডায়নামিক ব্যাক বাটন (সাবজেক্ট পৃষ্ঠা) – ফিক্সড ভার্সন ==========
 (function() {
   'use strict';
 
-  const subjectPage = document.getElementById('subject-page');
-  const backButton = document.getElementById('back-to-main');
-  const subjectTitleEl = document.getElementById('subject-title');
+  // ব্যাক বাটন কাস্টমাইজ করার ফাংশন
+  function customizeBackButton() {
+    const backBtn = document.getElementById('back-to-main');
+    if (!backBtn) return;
 
-  // বিশেষ ফোল্ডার যেগুলোতে সবসময় "মেন পেজ" দেখাবে
-  const SPECIAL_SUBJECTS = ['ইক্সাম', 'পরীক্ষার রেজাল্ট শীট', 'সাজেশন্স'];
+    // parentOfSubject ভেরিয়েবল থেকে প্যারেন্ট নির্ধারণ (showSubjectPage ফাংশনে সেট হয়)
+    const parent = window.parentOfSubject || 'main';
 
-  function getSubjectNameFromTitle() {
-    if (!subjectTitleEl) return '';
-    const span = subjectTitleEl.querySelector('.bangla-font');
-    return span ? span.textContent.trim() : '';
+    // টেক্সট ও ক্লিক হ্যান্ডলার পরিবর্তন
+    if (parent === 'classes') {
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">ক্লাস পেজ</span>';
+      // ক্লিক ইভেন্ট রিমুভ করে নতুন দিন (পূর্বের ইভেন্ট সরান)
+      const newBtn = backBtn.cloneNode(true);
+      backBtn.parentNode.replaceChild(newBtn, backBtn);
+      newBtn.onclick = function(e) {
+        e.preventDefault();
+        if (typeof closeSubjectPage === 'function') closeSubjectPage();
+        else window.location.reload();
+      };
+    } 
+    else if (parent === 'missions') {
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">মিশন পেজ</span>';
+      const newBtn = backBtn.cloneNode(true);
+      backBtn.parentNode.replaceChild(newBtn, backBtn);
+      newBtn.onclick = function(e) {
+        e.preventDefault();
+        if (typeof closeSubjectPage === 'function') closeSubjectPage();
+        else window.location.reload();
+      };
+    }
+    else if (parent === 'documents') {
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">ডকুমেন্ট পেজ</span>';
+      const newBtn = backBtn.cloneNode(true);
+      backBtn.parentNode.replaceChild(newBtn, backBtn);
+      newBtn.onclick = function(e) {
+        e.preventDefault();
+        if (typeof closeSubjectPage === 'function') closeSubjectPage();
+        else window.location.reload();
+      };
+    }
+    else {
+      // ডিফল্ট: মেন পেজ (পরীক্ষা, রেজাল্ট, সাজেশন্স, অথবা সরাসরি main থেকে খোলা)
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">মেন পেজ</span>';
+      const newBtn = backBtn.cloneNode(true);
+      backBtn.parentNode.replaceChild(newBtn, backBtn);
+      newBtn.onclick = function(e) {
+        e.preventDefault();
+        if (typeof returnToMainPage === 'function') returnToMainPage();
+        else window.location.reload();
+      };
+    }
   }
 
-  function updateBackButton() {
-    if (!subjectPage || !backButton || !subjectTitleEl) return;
-    if (subjectPage.style.display !== 'block') return;
-
-    const subject = getSubjectNameFromTitle();
-    if (!subject) return;
-
-    // ** গুরুত্বপূর্ণ: parentOfSubject কে প্রাধান্য দিন **
-    const parent = window.parentOfSubject || 'main';
-    let targetPage = 'main';
-    let buttonText = 'মেন পেজ';
-
-    // বিশেষ ফোল্ডার চেক (এক্ষেত্রে parent উপেক্ষা করে মেন পেজ)
-    const isSpecial = SPECIAL_SUBJECTS.some(s => subject.includes(s) || subject === s);
-    if (isSpecial) {
-      targetPage = 'main';
-      buttonText = 'মেন পেজ';
-    } 
-    // প্রথমে parent দিয়ে সিদ্ধান্ত নিন (এটি সবচেয়ে নির্ভরযোগ্য)
-    else if (parent === 'classes') {
-      targetPage = 'classes';
-      buttonText = 'ক্লাস পেজ';
-    } else if (parent === 'missions') {
-      targetPage = 'missions';
-      buttonText = 'মিশন পেজ';
-    } else if (parent === 'documents') {
-      targetPage = 'documents';
-      buttonText = 'ডকুমেন্ট পেজ';
-    }
-    // parent না থাকলে subject স্ট্রিং বিশ্লেষণ
-    else {
-      if (subject.includes('(মিশন)')) {
-        targetPage = 'missions';
-        buttonText = 'মিশন পেজ';
-      } else if (subject.includes('(ডকুমেন্ট)')) {
-        targetPage = 'documents';
-        buttonText = 'ডকুমেন্ট পেজ';
-      } else if (subject.includes('(ক্লাস)')) {
-        targetPage = 'classes';
-        buttonText = 'ক্লাস পেজ';
-      } else {
-        targetPage = 'main';
-        buttonText = 'মেন পেজ';
-      }
-    }
-
-    // ব্যাক বাটন আপডেট
-    const icon = backButton.querySelector('i');
-    const span = backButton.querySelector('.bangla-font');
-    if (span) {
-      span.textContent = buttonText;
-    } else {
-      backButton.innerHTML = `<i class="fas fa-arrow-left"></i> <span class="bangla-font">${buttonText}</span>`;
-    }
-
-    // পুরনো ইভেন্ট সরিয়ে নতুন বাটন তৈরি
-    const newButton = backButton.cloneNode(true);
-    backButton.parentNode.replaceChild(newButton, backButton);
-    
-    newButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // সাবজেক্ট পৃষ্ঠা লুকান
-      if (subjectPage) subjectPage.style.display = 'none';
-      
-      // টার্গেট পৃষ্ঠা দেখান
-      if (targetPage === 'classes' && typeof showClassesPage === 'function') {
-        showClassesPage();
-      } else if (targetPage === 'missions' && typeof showMissionsPage === 'function') {
-        showMissionsPage();
-      } else if (targetPage === 'documents' && typeof showDocumentsPage === 'function') {
-        showDocumentsPage();
-      } else {
-        const mainPage = document.getElementById('main-page');
-        if (mainPage) {
-          mainPage.style.display = 'block';
-          window.currentPageState = 'main';
-          if (typeof window.mainScrollPosition !== 'undefined') {
-            window.scrollTo(0, window.mainScrollPosition || 0);
+  // সাবজেক্ট পেজ দৃশ্যমান হলে কাস্টমাইজেশন চালানোর জন্য পর্যবেক্ষক
+  const subjectPage = document.getElementById('subject-page');
+  if (subjectPage) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          if (subjectPage.style.display === 'block') {
+            customizeBackButton();
           }
         }
-      }
-      
-      window.parentOfSubject = 'main'; // রিসেট
-      if (window.history && window.history.pushState) {
-        history.pushState({ page: targetPage }, '');
-      }
+      });
     });
-
-    window.backButton = newButton;
+    observer.observe(subjectPage, { attributes: true });
+    // পেজ লোডে যদি ইতিমধ্যে দৃশ্যমান থাকে
+    if (subjectPage.style.display === 'block') customizeBackButton();
   }
 
-  // মিউটেশন অবজারভার
-  const observer = new MutationObserver(() => {
-    if (subjectPage && subjectPage.style.display === 'block') {
-      updateBackButton();
-    }
-  });
-
-  if (subjectPage) {
-    observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
-    if (subjectTitleEl) {
-      observer.observe(subjectTitleEl, { childList: true, subtree: true, characterData: true });
-    }
-  }
-
-  if (subjectPage && subjectPage.style.display === 'block') {
-    updateBackButton();
-  }
-
-  // showSubjectPage ওভাররাইড
-  const originalShowSubject = window.showSubjectPage;
-  if (typeof originalShowSubject === 'function') {
-    window.showSubjectPage = function(...args) {
-      originalShowSubject.apply(this, args);
-      setTimeout(updateBackButton, 50);
+  // ========== নতুন মিশন পেজ (মিশন L2) এর জন্য ব্যাক বাটন কাস্টমাইজ ==========
+  const originalShowNewMissionPage = window.showNewMissionPage;
+  if (typeof originalShowNewMissionPage === 'function') {
+    window.showNewMissionPage = function(subject, missions) {
+      // মূল ফাংশন কল করুন
+      originalShowNewMissionPage(subject, missions);
+      // তারপর ব্যাক বাটন আপডেট করুন
+      setTimeout(() => {
+        const backBtn = document.getElementById('back-to-main');
+        if (backBtn) {
+          // টেক্সট পরিবর্তন করে "মিশন পেজ" করুন
+          backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">মিশন পেজ</span>';
+          // ক্লিক হ্যান্ডলার রিমুভ করে নতুন দিন (মূল ফাংশনে ইতিমধ্যে missions page এ ফেরত নেওয়ার ব্যবস্থা আছে)
+          const newBtn = backBtn.cloneNode(true);
+          backBtn.parentNode.replaceChild(newBtn, backBtn);
+          // নতুন ক্লিক হ্যান্ডলার: মিশন পেজে ফিরিয়ে নিয়ে যাবে (মূল showNewMissionPage এ যেভাবে সেট করা আছে)
+          newBtn.onclick = function(e) {
+            e.preventDefault();
+            const missionsPage = document.getElementById('missions-page');
+            const subjectPageEl = document.getElementById('subject-page');
+            if (missionsPage && subjectPageEl) {
+              subjectPageEl.style.display = 'none';
+              missionsPage.style.display = 'block';
+              window.currentPageState = 'missions';
+              // স্ক্রল পজিশন রিস্টোর (আগের সেভ করা স্ক্রল)
+              const scrollPos = window.missionsScrollPosition || 0;
+              window.scrollTo(0, scrollPos);
+            } else {
+              window.location.reload();
+            }
+          };
+        }
+      }, 50);
     };
   }
 
-  console.log('✅ ডায়নামিক ব্যাক বাটন (ফিক্সড) চালু হয়েছে');
+  // ========== ক্লাস, মিশন, ডকুমেন্ট পেজের ভিতরে থাকা সাবজেক্ট ফোল্ডারগুলোর জন্যও নিশ্চিত করা ==========
+  // (যেহেতু এগুলো showSubjectPage দিয়েই খোলা হয়, parentOfSubject ইতিমধ্যে সেট থাকে, তাই উপরের observer কাজ করবে)
+  console.log('✅ ব্যাক বাটন কাস্টমাইজেশন সক্রিয় হয়েছে');
 })();
-  </script>
+</script>
+  
 </body>
 </html>
