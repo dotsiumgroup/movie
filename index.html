@@ -5570,7 +5570,7 @@ if (specialFolders.includes(r.subject)) {
         
         card.innerHTML = `
           ${isCompleted ? '<div class="status-indicator status-completed"><i class="fas fa-check"></i></div>' : '<div class="status-indicator status-pending"><i class="fas fa-clock"></i></div>'}
-          <span class="card-badge bangla-font">ক্লাস ${r.displaySerial}</span>
+          <span class="card-badge bangla-font">সিরিয়াল ${r.displaySerial}</span>
           <div class="subject"><i class="fas fa-book"></i> <span class="bangla-font">${r.subject}</span></div>
           <div class="video-title bangla-font">${r.title}</div>
           <div class="time"><i class="fas fa-clock"></i> ${r.time} | <span class="bangla-font">${r.date}</span></div>
@@ -13143,7 +13143,7 @@ const SPECIAL_SUBJECTS = [
       card.setAttribute('data-timestamp', item.timestamp || '');
       card.innerHTML = `
         ${isCompleted ? '<div class="status-indicator status-completed"><i class="fas fa-check"></i></div>' : '<div class="status-indicator status-pending"><i class="fas fa-clock"></i></div>'}
-        <span class="card-badge bangla-font">মিশন ${item.displaySerial}</span>
+        <span class="card-badge bangla-font">সিরিয়াল ${item.displaySerial}</span>
         <div class="subject"><i class="fas fa-rocket"></i> <span class="bangla-font">${escapeHtml(item.subject)}</span></div>
         <div class="video-title bangla-font">${escapeHtml(item.title)}</div>
         <div class="time"><i class="fas fa-calendar"></i> ${item.date} | <i class="fas fa-clock"></i> ${item.time}</div>
@@ -13294,404 +13294,146 @@ const SPECIAL_SUBJECTS = [
 })();
   </script> 
   <script>
-(() => {
-  const re = /\(ক্লাস\)|\(মিশন\)|\(ডকুমেন্ট\)/g;
-
-  function scan(root) {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    for (const node of nodes) {
-      const p = node.parentElement;
-      if (!p || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/i.test(p.tagName) || p.classList.contains('hide-words')) continue;
-
-      const text = node.nodeValue;
-      re.lastIndex = 0;
-      if (!re.test(text)) continue;
-
-      re.lastIndex = 0;
-      const frag = document.createDocumentFragment();
-      let last = 0, m;
-
-      while ((m = re.exec(text))) {
-        if (m.index > last) frag.append(text.slice(last, m.index));
-        const s = document.createElement('span');
-        s.className = 'hide-words';
-        s.hidden = true;
-        s.textContent = m[0];
-        frag.append(s);
-        last = m.index + m[0].length;
-      }
-
-      if (last < text.length) frag.append(text.slice(last));
-      node.parentNode.replaceChild(frag, node);
-    }
-  }
-
-  const run = () => scan(document.body);
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', run);
-  } else {
-    run();
-  }
-
-  let timer;
-  new MutationObserver(() => {
-    clearTimeout(timer);
-    timer = setTimeout(run, 50);
-  }).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    characterData: true
-  });
-})();
-  </script>
-<!-- ========== স্মার্ট নেভিগেশন সিস্টেম (ব্যাক বাটন সহ) ========== -->
-<script>
 (function() {
-  'use strict';
+    'use strict';
 
-  // ========== নেভিগেশন স্ট্যাক ==========
-  let navStack = []; // প্রতিটি এন্ট্রি: { type, data, scrollY }
-  let isNavigatingBack = false; // ব্যাক বাটনের মাধ্যমে নেভিগেশন চললে স্ট্যাকে যেন না পুশ হয়
+    // যেসব এলিমেন্টের ভিতর থেকে শব্দগুলো সরানো হবে (ক্লাস কার্ড + ফোল্ডার লিস্ট)
+    const SELECTORS_TO_CLEAN = [
+        '.card .subject',          // কার্ডের সাবজেক্ট
+        '.card .video-title',      // কার্ডের টাইটেল
+        '.card .time',             // কার্ডের সময় (কোথাও থাকলে)
+        '.pill .bangla-font',      // ফোল্ডার লিস্টের নাম
+        '.subject-link span',      // মেইন পেজের সাবজেক্ট লিস্ট
+        '.subject-link-class span',// ক্লাস পেজের সাবজেক্ট লিস্ট
+        '.subject-link-mission span',// মিশন পেজের সাবজেক্ট লিস্ট
+        '.subject-link-document span' // ডকুমেন্ট পেজের সাবজেক্ট লিস্ট
+    ];
 
-  // ========== বর্তমান পৃষ্ঠার টাইপ বের করা ==========
-  function getCurrentPageType() {
-    if (document.getElementById('main-page')?.style.display === 'block') return 'main';
-    if (document.getElementById('classes-page')?.style.display === 'block') return 'classes';
-    if (document.getElementById('missions-page')?.style.display === 'block') return 'missions';
-    if (document.getElementById('documents-page')?.style.display === 'block') return 'documents';
-    if (document.getElementById('subject-page')?.style.display === 'block') return 'subject';
-    if (document.getElementById('new-mission-folder-view')?.style.display === 'block') return 'mission-l2-folder';
-    return null;
-  }
+    // যে সব এলিমেন্টের ভিতরে শব্দগুলো থাকলেও সরানো যাবে না (টেবিল, সার্চ, শিরোনাম)
+    const EXCLUDE_PARENT_SELECTORS = [
+        '.today-classes-table',     // আজকের ক্লাস টেবিল
+        '.search-result-item',      // সার্চ রেজাল্ট
+        '.subject-title'            // সাবজেক্ট পেজের শিরোনাম
+    ];
 
-  // ========== বর্তমান পৃষ্ঠার ডাটা সংগ্রহ ==========
-  function getCurrentPageData() {
-    const type = getCurrentPageType();
-    if (!type) return null;
+    // রেগুলার এক্সপ্রেশন: (ক্লাস), (মিশন), (ডকুমেন্ট) শনাক্ত করবে
+    const PATTERN = /\([কমিশডক্লাu]+\)/g;
+    // নির্দিষ্ট টার্গেট শব্দ
+    const TARGET_WORDS = ['(ক্লاس)', '(মিশন)', '(ডকুমেন্ট)'];
+    // বাংলা বানান ভ্যারিয়েন্ট থাকলে কভার করতে আরও নির্ভুল প্যাটার্ন
+    const EXACT_PATTERN = /\((ক্লাস|মিশন|ডকুমেন্ট)\)/g;
 
-    const data = { type, scrollY: window.scrollY };
-
-    if (type === 'subject') {
-      const titleElem = document.getElementById('subject-title');
-      if (titleElem) {
-        const fullText = titleElem.innerText;
-        const match = fullText.match(/<span class="bangla-font">(.*?)<\/span>/);
-        data.subject = match ? match[1] : fullText.replace(/[<>\/]/g, '').trim();
-      }
-      // ফোল্ডার প্যারেন্ট (ক্লাস/মিশন/ডকুমেন্ট) জানার জন্য
-      if (window.parentOfSubject) data.parent = window.parentOfSubject;
-    }
-    else if (type === 'mission-l2-folder') {
-      // নতুন মিশন সিস্টেমের ফোল্ডার
-      const folderTitle = document.getElementById('mission-l2-folder-title')?.innerText || '';
-      data.folderName = folderTitle;
-    }
-    else if (type === 'classes') data.folder = 'classes';
-    else if (type === 'missions') data.folder = 'missions';
-    else if (type === 'documents') data.folder = 'documents';
-
-    return data;
-  }
-
-  // ========== পূর্ববর্তী পৃষ্ঠায় ফেরানো ==========
-  function goBack() {
-    if (navStack.length === 0) return;
-
-    isNavigatingBack = true;
-    const prev = navStack.pop();
-
-    // বর্তমান পৃষ্ঠা লুকিয়ে পূর্ববর্তী পৃষ্ঠা দেখানো
-    const currentType = getCurrentPageType();
-    if (currentType) {
-      document.getElementById(`${currentType}-page`)?.style.setProperty('display', 'none');
-    }
-
-    // পূর্ববর্তী পৃষ্ঠা দেখানো
-    if (prev.type === 'main') {
-      document.getElementById('main-page').style.display = 'block';
-    } else if (prev.type === 'classes') {
-      document.getElementById('classes-page').style.display = 'block';
-      if (typeof renderClassesPage === 'function') renderClassesPage();
-    } else if (prev.type === 'missions') {
-      document.getElementById('missions-page').style.display = 'block';
-      if (typeof renderMissionsPage === 'function') renderMissionsPage();
-      // নতুন মিশন সিস্টেমের ট্যাব ঠিক রাখা
-      setTimeout(() => {
-        const activeTab = document.querySelector('.mission-tab.active');
-        if (!activeTab || activeTab.dataset.tab !== 'regular') {
-          document.querySelector('.mission-tab[data-tab="regular"]')?.click();
-        }
-      }, 50);
-    } else if (prev.type === 'documents') {
-      document.getElementById('documents-page').style.display = 'block';
-      if (typeof renderDocumentsPage === 'function') renderDocumentsPage();
-    } else if (prev.type === 'subject') {
-      document.getElementById('subject-page').style.display = 'block';
-      if (prev.data.subject) {
-        document.getElementById('subject-title').innerHTML = `<i class="fas fa-book"></i> <span class="bangla-font">${prev.data.subject}</span>`;
-        if (typeof showSubjectPage === 'function') {
-          showSubjectPage(prev.data.subject, prev.data.parent || 'main');
-        } else {
-          // ফ্যালব্যাক: ক্লাস রিলোড
-          const classes = window.filterClassesByTimeRange?.('all') || [];
-          const grouped = window.groupClassesBySubject?.(classes) || {};
-          const subjectClasses = grouped[prev.data.subject] || [];
-          const root = document.getElementById('classGrid');
-          if (root && window.renderCards) window.renderCards(subjectClasses, root);
-        }
-      }
-    } else if (prev.type === 'mission-l2-folder') {
-      // নতুন মিশন ফোল্ডার পুনরায় খোলা
-      const folderName = prev.data.folderName;
-      if (folderName && window.openNewMissionFolderDirectly) {
-        window.openNewMissionFolderDirectly(folderName);
-      } else {
-        // ফ্যালব্যাক: মিশন পৃষ্ঠা দেখানো
-        document.getElementById('missions-page').style.display = 'block';
-        if (typeof renderMissionsPage === 'function') renderMissionsPage();
-      }
-    }
-
-    // স্ক্রল পজিশন রিস্টোর
-    setTimeout(() => window.scrollTo(0, prev.scrollY || 0), 50);
-    isNavigatingBack = false;
-  }
-
-  // ========== বর্তমান পৃষ্ঠাকে স্ট্যাকে যুক্ত করা (যদি ব্যাক না হয়) ==========
-  function pushCurrentToStack() {
-    if (isNavigatingBack) return;
-    const currentData = getCurrentPageData();
-    if (!currentData) return;
-
-    // একই টাইপের শেষ এন্ট্রি রিপ্লেস না করে নতুন যোগ
-    navStack.push(currentData);
-    // স্ট্যাক খুব বড় হলে পুরাতন মুছে ফেলা
-    if (navStack.length > 30) navStack.shift();
-  }
-
-  // ========== বিশেষ ফোল্ডার চেক করা (যেখানে ব্যাক বাটন লাগবে না) ==========
-  function isSpecialFolder(subjectName) {
-    const specials = ['ইক্সাম', 'পরীক্ষার রেজাল্ট শীট', 'সাজেশন্স'];
-    return specials.some(sp => subjectName.includes(sp));
-  }
-
-  // ========== ব্যাক বাটন তৈরি ও সংযুক্ত করা ==========
-  function addBackButtonIfNeeded() {
-    // যেসব পৃষ্ঠায় ব্যাক বাটন প্রয়োজন
-    const currentType = getCurrentPageType();
-    const isSubject = (currentType === 'subject');
-    const isMissionL2 = (currentType === 'mission-l2-folder');
-    const isMainFolder = ['classes', 'missions', 'documents'].includes(currentType);
-    const isSpecial = isSubject && isSpecialFolder(document.getElementById('subject-title')?.innerText || '');
-
-    // ব্যাক বাটন শুধু লাগবে: ক্লাস/মিশন/ডকুমেন্ট ফোল্ডার পেজ, সাবজেক্ট পেজ (স্পেশাল ছাড়া), মিশন L2 ফোল্ডার
-    const needBack = isMainFolder || (isSubject && !isSpecial) || isMissionL2;
-
-    // নেভিগেশন বার নির্বাচন
-    let navBar = null;
-    if (currentType === 'subject') {
-      navBar = document.querySelector('#subject-page .nav');
-    } else if (currentType === 'mission-l2-folder') {
-      navBar = document.querySelector('#new-mission-folder-view .nav');
-    } else if (currentType === 'classes') {
-      navBar = document.querySelector('#classes-page .nav');
-    } else if (currentType === 'missions') {
-      navBar = document.querySelector('#missions-page .nav');
-    } else if (currentType === 'documents') {
-      navBar = document.querySelector('#documents-page .nav');
-    }
-
-    if (!navBar) return;
-
-    // ইতিমধ্যে ব্যাক বাটন থাকলে বাদ
-    if (navBar.querySelector('.custom-back-btn')) return;
-
-    // "মেন পেজ" বাটন খোঁজা (যদি থাকে)
-    const menuBtn = navBar.querySelector('.back-button, #back-to-main, #back-to-main-from-classes, #back-to-main-from-missions, #back-to-main-from-documents');
-    
-    if (needBack) {
-      // ব্যাক বাটন তৈরি
-      const backBtn = document.createElement('button');
-      backBtn.className = 'btn custom-back-btn';
-      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">পেছনে</span>';
-      backBtn.style.marginRight = '8px';
-      backBtn.style.background = 'linear-gradient(135deg, #ff7e5f, #feb47b)';
-      
-      backBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        goBack();
-      });
-
-      // যদি মেন পেজ বাটন থাকে, তার আগে বসানো
-      if (menuBtn) {
-        navBar.insertBefore(backBtn, menuBtn);
-        // স্পেশাল ফোল্ডারে মেন পেজ বাটন থাকবে, সাধারণ ফোল্ডারে সেটি লুকানো
-        if (!isSpecial) {
-          menuBtn.style.display = 'none';
-        }
-      } else {
-        // যদি মেন পেজ বাটন না থাকে, তাহলে প্রথমে বসানো
-        navBar.prepend(backBtn);
-      }
-    } else {
-      // স্পেশাল ফোল্ডারে: ব্যাক বাটন লাগবে না, মেন পেজ বাটন থাকবে
-      if (menuBtn) menuBtn.style.display = 'inline-flex';
-    }
-  }
-
-  // ========== পৃষ্ঠা পরিবর্তনের সময় স্ট্যাক আপডেট এবং ব্যাক বাটন যুক্ত ==========
-  function onPageChange() {
-    pushCurrentToStack();
-    setTimeout(() => addBackButtonIfNeeded(), 30);
-  }
-
-  // ========== বিদ্যমান ফাংশনগুলোকে মনিটর করা ==========
-  function patchNavigationFunctions() {
-    // showSubjectPage ফাংশন ওভাররাইড (যদি থাকে)
-    const originalShowSubject = window.showSubjectPage;
-    if (originalShowSubject) {
-      window.showSubjectPage = function(subject, from, fromTable) {
-        onPageChange(); // বর্তমান পৃষ্ঠা স্ট্যাকে যোগ
-        originalShowSubject(subject, from, fromTable);
-      };
-    }
-
-    // showClassesPage
-    const originalShowClasses = window.showClassesPage;
-    if (originalShowClasses) {
-      window.showClassesPage = function() {
-        onPageChange();
-        originalShowClasses();
-      };
-    }
-
-    // showMissionsPage
-    const originalShowMissions = window.showMissionsPage;
-    if (originalShowMissions) {
-      window.showMissionsPage = function() {
-        onPageChange();
-        originalShowMissions();
-      };
-    }
-
-    // showDocumentsPage
-    const originalShowDocuments = window.showDocumentsPage;
-    if (originalShowDocuments) {
-      window.showDocumentsPage = function() {
-        onPageChange();
-        originalShowDocuments();
-      };
-    }
-
-    // returnToMainPage
-    const originalReturnToMain = window.returnToMainPage;
-    if (originalReturnToMain) {
-      window.returnToMainPage = function() {
-        onPageChange();
-        originalReturnToMain();
-      };
-    }
-
-    // ক্লোজ সাবজেক্ট পেজ (যদি আলাদা ফাংশন থাকে)
-    const originalCloseSubject = window.closeSubjectPage;
-    if (originalCloseSubject) {
-      window.closeSubjectPage = function() {
-        onPageChange();
-        originalCloseSubject();
-      };
-    }
-  }
-
-  // ========== মিশন L2 ফোল্ডার সিস্টেমের সাথে সংযোগ ==========
-  function patchMissionL2() {
-    // নতুন মিশন সিস্টেমের ফোল্ডার খোলার ফাংশন ক্যাপচার
-    const originalOpenFolder = window.openNewMissionFolder;
-    if (originalOpenFolder) {
-      window.openNewMissionFolder = function(subject, missions) {
-        onPageChange();
-        originalOpenFolder(subject, missions);
-      };
-    }
-    // যদি openNewMissionFolderDirectly নামে ফাংশন থাকে, সেটিও
-    const originalOpenDirect = window.openNewMissionFolderDirectly;
-    if (originalOpenDirect) {
-      window.openNewMissionFolderDirectly = function(subject) {
-        onPageChange();
-        originalOpenDirect(subject);
-      };
-    }
-  }
-
-  // ========== মিউটেশন অবজার্ভার (পৃষ্ঠা পরিবর্তন ট্র্যাকিং) ==========
-  function observePageVisibility() {
-    const pages = ['main-page', 'classes-page', 'missions-page', 'documents-page', 'subject-page'];
-    pages.forEach(id => {
-      const elem = document.getElementById(id);
-      if (elem) {
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach(mut => {
-            if (mut.type === 'attributes' && mut.attributeName === 'style') {
-              if (elem.style.display === 'block') {
-                // পৃষ্ঠা দৃশ্যমান হলে স্ট্যাকে যোগ এবং বাটন আপডেট
-                onPageChange();
-              }
+    // কোনো এলিমেন্টের টেক্সট থেকে টার্গেট শব্দ মুছে ফেলা (শুধু মিললেই)
+    function cleanElementText(element) {
+        if (!element || element._cleaned) return;
+        
+        // চেক করা যে এই এলিমেন্ট বা এর কোনো প্যারেন্ট এক্সক্লুডেড কিনা
+        let parent = element;
+        while (parent && parent !== document.body) {
+            for (let sel of EXCLUDE_PARENT_SELECTORS) {
+                if (parent.matches && parent.matches(sel)) {
+                    return; // এক্সক্লুডেড, কিছু করবো না
+                }
             }
-          });
-        });
-        observer.observe(elem, { attributes: true });
-      }
-    });
-  }
-
-  // ========== এক্সট্রা: ক্লাস পৃষ্ঠায় ব্যাক বাটন ঠিক রাখা ==========
-  function fixBackButtonOnFolderPages() {
-    // ক্লাস পেজে ব্যাক বাটন থাকলে তা গো ব্যাক ফাংশনালিটি দিয়ে ওভাররাইড
-    const folderPages = ['classes-page', 'missions-page', 'documents-page'];
-    folderPages.forEach(pageId => {
-      const page = document.getElementById(pageId);
-      if (page) {
-        const existingBackBtn = page.querySelector('.custom-back-btn');
-        if (existingBackBtn) {
-          existingBackBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            goBack();
-          });
+            parent = parent.parentElement;
         }
-      }
-    });
-  }
 
-  // ========== ইনিশিয়ালাইজেশন ==========
-  function init() {
-    patchNavigationFunctions();
-    patchMissionL2();
-    observePageVisibility();
-    fixBackButtonOnFolderPages();
-    // প্রথম পৃষ্ঠা (মেইন) স্ট্যাকে যোগ
-    setTimeout(() => {
-      pushCurrentToStack();
-      addBackButtonIfNeeded();
-    }, 100);
-  }
+        let originalText = element.innerText;
+        if (!originalText) return;
+        
+        let newText = originalText.replace(EXACT_PATTERN, '');
+        // যদি কোনো পরিবর্তন হয়
+        if (newText !== originalText) {
+            // স্পেস ট্রিম করে ফাঁকা হলে একটা জায়গা রেখে দিই
+            newText = newText.trim();
+            if (newText === '') newText = ' ';
+            element.innerText = newText;
+            element._cleaned = true;
+        }
+    }
 
-  // DOM লোড হলে চালু
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+    // নির্দিষ্ট সিলেক্টরগুলোর সব এলিমেন্ট পরিষ্কার করা
+    function cleanAll() {
+        for (let selector of SELECTORS_TO_CLEAN) {
+            document.querySelectorAll(selector).forEach(el => {
+                cleanElementText(el);
+            });
+        }
+    }
+
+    // নতুন যোগ হওয়া এলিমেন্টগুলোর জন্য MutationObserver
+    function observeDOM() {
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                // নতুন নোড যোগ হলে
+                if (mutation.addedNodes.length) {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            // চেক করা যে নোড বা এর সন্তানরা আমাদের সিলেক্টরের মধ্যে পড়ে কিনা
+                            for (let selector of SELECTORS_TO_CLEAN) {
+                                if (node.matches && node.matches(selector)) {
+                                    cleanElementText(node);
+                                }
+                                node.querySelectorAll(selector).forEach(el => cleanElementText(el));
+                            }
+                        }
+                    });
+                }
+                // এট্রিবিউট বা টেক্সট পরিবর্তন হলে (যদি innerHTML পরিবর্তিত হয়)
+                if (mutation.type === 'characterData' && mutation.target.parentElement) {
+                    for (let selector of SELECTORS_TO_CLEAN) {
+                        let parent = mutation.target.parentElement;
+                        if (parent.matches && parent.matches(selector)) {
+                            cleanElementText(parent);
+                        }
+                    }
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            characterDataOldValue: true
+        });
+    }
+
+    // পেজ লোডে একবার পরিষ্কার করো
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            cleanAll();
+            observeDOM();
+        });
+    } else {
+        cleanAll();
+        observeDOM();
+    }
+
+    // ডায়নামিক কন্টেন্ট রিফ্রেশের জন্য (যেমন ড্যাশবোর্ড বা ক্লাস লোড হলে)
+    // রিফ্রেশ বাটনেও ক্লিন করো
+    const refreshBtn = document.getElementById('refresh-data-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => setTimeout(cleanAll, 500));
+    }
+
+    // সাবজেক্ট পেজ ওপেনের পরও ক্লিন করো (কারণ কার্ড রেন্ডার হয় পরে)
+    const originalShowSubjectPage = window.showSubjectPage;
+    if (typeof originalShowSubjectPage === 'function') {
+        window.showSubjectPage = function(...args) {
+            originalShowSubjectPage.apply(this, args);
+            setTimeout(cleanAll, 200);
+        };
+    }
 })();
 </script>
-      <!-- ========== ড্রাইভ প্লেয়ারে ডাউনলোড বাটন (কোনো পূর্বের কোড পরিবর্তন ছাড়া) ========== -->
+
+<!-- ========== ড্রাইভ প্লেয়ারে দ্রুত ডাউনলোড + লোডিং স্পিনার + এক্সটার্নাল ব্রাউজার ========== -->
 <script>
 (function() {
     'use strict';
 
-    // স্টাইল ইনজেক্ট করা (প্রয়োজনীয় ডিজাইন)
+    // স্টাইল ইনজেক্ট
     const style = document.createElement('style');
     style.textContent = `
         #drive-download-btn {
@@ -13710,6 +13452,7 @@ const SPECIAL_SUBJECTS = [
             text-align: center;
             transition: 0.15s;
             user-select: none;
+            min-width: 90px;
         }
         #drive-download-btn:hover {
             transform: scale(1.05);
@@ -13725,13 +13468,39 @@ const SPECIAL_SUBJECTS = [
             font-weight: bold;
             line-height: 15px;
         }
+        
+        /* স্পিনার স্টাইল */
+        #drive-download-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        #drive-download-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 4px;
+        }
+        #drive-download-btn.loading .spinner {
+            display: block;
+        }
+        #drive-download-btn.loading .small,
+        #drive-download-btn.loading .big {
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     `;
     document.head.appendChild(style);
 
     // ড্রাইভ আইডি এক্সট্রাক্টর
     function extractDriveId(url) {
         if (!url) return null;
-        // প্যাটার্ন: /d/ID, id=ID, /file/d/ID ইত্যাদি
         const patterns = [
             /\/d\/([a-zA-Z0-9_-]+)/,
             /[?&]id=([a-zA-Z0-9_-]+)/,
@@ -13741,7 +13510,6 @@ const SPECIAL_SUBJECTS = [
             const match = url.match(p);
             if (match) return match[1];
         }
-        // ফলব্যাক: সাধারণ গুগল ড্রাইভ আইডি দৈর্ঘ্য ≥ 25 ক্যারেক্টার
         const generic = url.match(/[-\w]{25,}/);
         return generic ? generic[0] : null;
     }
@@ -13750,21 +13518,20 @@ const SPECIAL_SUBJECTS = [
     function addDownloadButton() {
         const drivePage = document.getElementById('drive-player-page');
         if (!drivePage) return;
-
-        // ইতিমধ্যে বাটন থাকলে দ্বিতীয়বার তৈরি নয়
         if (document.getElementById('drive-download-btn')) return;
 
         const downloadBtn = document.createElement('button');
         downloadBtn.id = 'drive-download-btn';
         downloadBtn.innerHTML = `
+            <div class="spinner"></div>
             <div class="small">Download</div>
-            <div class="big">File</div>
+            <div class="big">This File</div>
         `;
 
         downloadBtn.onclick = function() {
             let fileId = null;
 
-            // ১. গ্লোবাল driveUrl থেকে (যদি সেট করা থাকে)
+            // ১. গ্লোবাল driveUrl থেকে
             if (window.driveUrl) {
                 fileId = extractDriveId(window.driveUrl);
             }
@@ -13778,8 +13545,23 @@ const SPECIAL_SUBJECTS = [
             }
 
             if (fileId) {
-                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                window.open(downloadUrl, '_blank');
+                // লোডিং স্পিনার চালু
+                downloadBtn.classList.add('loading');
+                
+                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=no`;
+                
+                // ওয়েবভিউয়ের বাইরে ব্রাউজারে খোলার চেষ্টা
+                const newWindow = window.open(downloadUrl, '_blank');
+                
+                // পপআপ ব্লক হলে ফ্যালব্যাক: বর্তমান উইন্ডোতেই খোলা
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    window.location.href = downloadUrl;
+                }
+                
+                // ৩ সেকেন্ড পর স্পিনার বন্ধ
+                setTimeout(() => {
+                    downloadBtn.classList.remove('loading');
+                }, 3000);
             } else {
                 alert('ডাউনলোড লিংক তৈরি করা সম্ভব হয়নি।');
             }
@@ -13808,7 +13590,7 @@ const SPECIAL_SUBJECTS = [
         }
     }
 
-    // পেজ লোডের পরও একবার চেক করা (নিরাপত্তার জন্য)
+    // পেজ লোডের পরও একবার চেক করা
     window.addEventListener('load', function() {
         if (drivePage && drivePage.style.display === 'block') {
             addDownloadButton();
@@ -13816,6 +13598,6 @@ const SPECIAL_SUBJECTS = [
     });
 
 })();
-  </script>
-  </body>
+</script>
+</body>
 </html>
