@@ -3775,8 +3775,7 @@
     </div>
 
     <button class="main-btn" id="main-website-btn">আপনার এনরোলকৃত কোর্স</button>
-          <!-- বাটন: যেকোনো জায়গায় বসাতে পারেন (হেডার, ফুটার, কন্টেন্ট) -->
-<button id="enableNotificationsBtn" style="padding: 12px 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+<button onclick="enableNotifications()" style="padding: 12px 24px; background: #007BFF; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
   🔔 নোটিফিকেশন চালু করুন
 </button>
     <!-- MOTIVATION AREA -->
@@ -13652,25 +13651,5 @@ const SPECIAL_SUBJECTS = [
 })();
   </script>
 
-
-<!-- স্ক্রিপ্ট: পেজের নিচে body শেষ হওয়ার আগে বসান -->
-<script>
-  document.getElementById('enableNotificationsBtn').addEventListener('click', function() {
-    // প্রথমে চেক করবে Median Bridge আছে কিনা (অ্যাপের ভেতর)
-    if (typeof median !== 'undefined' && median.onesignal) {
-      median.onesignal.register(); // সরাসরি নেটিভ পারমিশন চাইবে
-    } 
-    // Median Bridge না থাকলে OneSignal Slide Prompt দেখাবে
-    else if (typeof OneSignal !== 'undefined') {
-      OneSignal.push(function() {
-        OneSignal.showSlidedownPrompt();
-      });
-    }
-    // কিছুই না পেলে মেসেজ দেখাবে
-    else {
-      alert("দয়া করে অ্যাপটি ইন্সটল করে ব্যবহার করুন।");
-    }
-  });
-  </script>
 </body>
 </html>
