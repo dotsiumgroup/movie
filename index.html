@@ -13651,64 +13651,6 @@ const SPECIAL_SUBJECTS = [
   fixBackButton();
 })();
   </script>
-  <!-- Manual Notification Subscribe Button (Guaranteed Visible) -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  // Create button
-  var btn = document.createElement("button");
-  btn.innerText = "🔔 Notification ON";
-  btn.id = "manualNotifyBtn";
-
-  // Style: header top-right
-  btn.style.position = "fixed";
-  btn.style.top = "10px";
-  btn.style.right = "15px";
-  btn.style.zIndex = "999999";
-  btn.style.padding = "6px 10px";
-  btn.style.fontSize = "13px";
-  btn.style.borderRadius = "6px";
-  btn.style.border = "none";
-  btn.style.background = "#1976d2";
-  btn.style.color = "#fff";
-  btn.style.cursor = "pointer";
-
-  document.body.appendChild(btn);
-
-  // Click action
-  btn.onclick = function () {
-
-    // Case 1: Median + OneSignal available
-    if (window.OneSignal && OneSignal.Notifications) {
-      OneSignal.Notifications.requestPermission()
-        .then(function () {
-          return OneSignal.Notifications.permission;
-        })
-        .then(function (permission) {
-          if (permission === "granted") {
-            btn.innerText = "✅ Subscribed";
-            btn.style.background = "#2e7d32";
-            alert("🎉 Notification চালু হয়েছে");
-          } else {
-            alert("❌ Notification Allow করা হয়নি");
-          }
-        })
-        .catch(function () {
-          alert("⚠️ Notification request করা যায়নি");
-        });
-    }
-
-    // Case 2: OneSignal not available
-    else {
-      alert(
-        "⚠️ Notification system এখনো লোড হয়নি।\n" +
-        "দয়া করে App reload করে আবার চেষ্টা করুন।"
-      );
-    }
-  };
-
-});
-</script>
 
 
 <!-- স্ক্রিপ্ট: পেজের নিচে body শেষ হওয়ার আগে বসান -->
