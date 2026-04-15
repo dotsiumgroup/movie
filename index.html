@@ -13648,67 +13648,63 @@ const SPECIAL_SUBJECTS = [
   fixBackButton();
 })();
   </script>
-  <!-- OneSignal Manual Subscribe Button -->
+  <!-- Manual Notification Subscribe Button (Guaranteed Visible) -->
 <script>
-(function () {
-  // Wait until OneSignal is ready
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function (OneSignal) {
+document.addEventListener("DOMContentLoaded", function () {
 
-    // Create button
-    const btn = document.createElement("button");
-    btn.innerText = "🔔 Subscribe";
-    btn.id = "os-manual-subscribe";
+  // Create button
+  var btn = document.createElement("button");
+  btn.innerText = "🔔 Notification ON";
+  btn.id = "manualNotifyBtn";
 
-    // Button style (header right side)
-    btn.style.position = "fixed";
-    btn.style.top = "10px";
-    btn.style.right = "15px";
-    btn.style.zIndex = "99999";
-    btn.style.padding = "6px 12px";
-    btn.style.fontSize = "13px";
-    btn.style.borderRadius = "6px";
-    btn.style.border = "none";
-    btn.style.background = "#1976d2";
-    btn.style.color = "#fff";
-    btn.style.cursor = "pointer";
+  // Style: header top-right
+  btn.style.position = "fixed";
+  btn.style.top = "10px";
+  btn.style.right = "15px";
+  btn.style.zIndex = "999999";
+  btn.style.padding = "6px 10px";
+  btn.style.fontSize = "13px";
+  btn.style.borderRadius = "6px";
+  btn.style.border = "none";
+  btn.style.background = "#1976d2";
+  btn.style.color = "#fff";
+  btn.style.cursor = "pointer";
 
-    document.body.appendChild(btn);
+  document.body.appendChild(btn);
 
-    // Check current permission
-    OneSignal.Notifications.permission.then(function (permission) {
-      if (permission === "granted") {
-        btn.innerText = "✅ Subscribed";
-        btn.style.background = "#2e7d32";
-      }
-    });
+  // Click action
+  btn.onclick = function () {
 
-    // Click handler
-    btn.addEventListener("click", async function () {
-      const permission = await OneSignal.Notifications.permission;
+    // Case 1: Median + OneSignal available
+    if (window.OneSignal && OneSignal.Notifications) {
+      OneSignal.Notifications.requestPermission()
+        .then(function () {
+          return OneSignal.Notifications.permission;
+        })
+        .then(function (permission) {
+          if (permission === "granted") {
+            btn.innerText = "✅ Subscribed";
+            btn.style.background = "#2e7d32";
+            alert("🎉 Notification চালু হয়েছে");
+          } else {
+            alert("❌ Notification Allow করা হয়নি");
+          }
+        })
+        .catch(function () {
+          alert("⚠️ Notification request করা যায়নি");
+        });
+    }
 
-      if (permission === "granted") {
-        alert("✅ আপনি ইতিমধ্যেই সাবস্ক্রাইব করা আছেন");
-        return;
-      }
+    // Case 2: OneSignal not available
+    else {
+      alert(
+        "⚠️ Notification system এখনো লোড হয়নি।\n" +
+        "দয়া করে App reload করে আবার চেষ্টা করুন।"
+      );
+    }
+  };
 
-      try {
-        await OneSignal.Notifications.requestPermission();
-        const newPermission = await OneSignal.Notifications.permission;
-
-        if (newPermission === "granted") {
-          btn.innerText = "✅ Subscribed";
-          btn.style.background = "#2e7d32";
-          alert("🎉 Notification চালু হয়েছে!");
-        } else {
-          alert("❌ Notification Allow করা হয়নি");
-        }
-      } catch (e) {
-        alert("⚠️ Notification request করা যায়নি");
-      }
-    });
-  });
-})();
+});
 </script>
 </body>
 </html>
