@@ -13648,6 +13648,67 @@ const SPECIAL_SUBJECTS = [
   fixBackButton();
 })();
   </script>
-  
+  <!-- OneSignal Manual Subscribe Button -->
+<script>
+(function () {
+  // Wait until OneSignal is ready
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function (OneSignal) {
+
+    // Create button
+    const btn = document.createElement("button");
+    btn.innerText = "🔔 Subscribe";
+    btn.id = "os-manual-subscribe";
+
+    // Button style (header right side)
+    btn.style.position = "fixed";
+    btn.style.top = "10px";
+    btn.style.right = "15px";
+    btn.style.zIndex = "99999";
+    btn.style.padding = "6px 12px";
+    btn.style.fontSize = "13px";
+    btn.style.borderRadius = "6px";
+    btn.style.border = "none";
+    btn.style.background = "#1976d2";
+    btn.style.color = "#fff";
+    btn.style.cursor = "pointer";
+
+    document.body.appendChild(btn);
+
+    // Check current permission
+    OneSignal.Notifications.permission.then(function (permission) {
+      if (permission === "granted") {
+        btn.innerText = "✅ Subscribed";
+        btn.style.background = "#2e7d32";
+      }
+    });
+
+    // Click handler
+    btn.addEventListener("click", async function () {
+      const permission = await OneSignal.Notifications.permission;
+
+      if (permission === "granted") {
+        alert("✅ আপনি ইতিমধ্যেই সাবস্ক্রাইব করা আছেন");
+        return;
+      }
+
+      try {
+        await OneSignal.Notifications.requestPermission();
+        const newPermission = await OneSignal.Notifications.permission;
+
+        if (newPermission === "granted") {
+          btn.innerText = "✅ Subscribed";
+          btn.style.background = "#2e7d32";
+          alert("🎉 Notification চালু হয়েছে!");
+        } else {
+          alert("❌ Notification Allow করা হয়নি");
+        }
+      } catch (e) {
+        alert("⚠️ Notification request করা যায়নি");
+      }
+    });
+  });
+})();
+</script>
 </body>
 </html>
