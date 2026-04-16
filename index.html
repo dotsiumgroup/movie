@@ -13716,214 +13716,215 @@ const SPECIAL_SUBJECTS = [
   }
 }
 </style>
-
 <script>
 (function() {
-  'use strict';
+    'use strict';
 
-  // পেজ এলিমেন্ট রেফারেন্স
-  const subjectPage = document.getElementById('subject-page');
-  const classesPage = document.getElementById('classes-page');
-  const missionsPage = document.getElementById('missions-page');
-  const documentsPage = document.getElementById('documents-page');
-  const mainPage = document.getElementById('main-page');
+    // ==================== 1. সাবজেক্ট পেজে নেভিগেশন বাটন যুক্ত করা ====================
+    function injectSubjectNavButtons() {
+        const subjectPage = document.getElementById('subject-page');
+        if (!subjectPage || subjectPage.style.display !== 'block') return;
 
-  // যদি প্রয়োজনীয় পেজ না থাকে তাহলে exit
-  if (!subjectPage || !classesPage || !missionsPage || !documentsPage) return;
+        // যদি ইতিমধ্যে বাটন থাকে তবে আর যোগ করব না
+        if (document.querySelector('.subject-nav-buttons')) return;
 
-  // ========== সাবজেক্ট পেজে ছোট নেভিগেশন বাটন যোগ করা ==========
-  function addNavigationButtonsToSubjectPage() {
-    // ইতিমধ্যে বাটন যোগ করা আছে কিনা চেক
-    if (document.getElementById('subjectNavButtons')) return;
+        const navContainer = subjectPage.querySelector('nav.nav.container');
+        if (!navContainer) return;
 
-    const navContainer = subjectPage.querySelector('header .nav.container');
-    if (!navContainer) return;
+        const backButton = navContainer.querySelector('.brand.back-button');
+        if (!backButton) return;
 
-    // ব্যাক বাটন খুঁজে বের করা
-    const backButton = navContainer.querySelector('.back-button');
-    if (!backButton) return;
+        // বাটনগুলোর জন্য ধারক তৈরি
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'subject-nav-buttons';
+        buttonsDiv.style.display = 'flex';
+        buttonsDiv.style.gap = '8px';
+        buttonsDiv.style.marginLeft = '16px'; // ব্যাক বাটনের পর সামান্য ফাঁকা
 
-    // ব্যাক বাটনের প্যারেন্ট (সাধারণত সরাসরি nav.container)
-    const parentElement = backButton.parentNode;
+        // তিনটি বাটন তৈরি
+        const buttons = [
+            { name: 'ক্লাস', action: () => window.showClassesPage && window.showClassesPage() },
+            { name: 'মিশন', action: () => window.showMissionsPage && window.showMissionsPage() },
+            { name: 'ডকুমেন্ট', action: () => window.showDocumentsPage && window.showDocumentsPage() }
+        ];
 
-    // ছোট বাটনগুলোর কন্টেইনার
-    const smallNav = document.createElement('div');
-    smallNav.id = 'subjectNavButtons';
-    smallNav.className = 'subject-nav-buttons';
-    smallNav.innerHTML = `
-      <button class="subject-nav-btn" data-target="classes"><i class="fas fa-book"></i> ক্লাস</button>
-      <button class="subject-nav-btn" data-target="missions"><i class="fas fa-bullseye"></i> মিশন</button>
-      <button class="subject-nav-btn" data-target="documents"><i class="fas fa-file-alt"></i> ডকুমেন্ট</button>
-    `;
+        buttons.forEach(btn => {
+            const button = document.createElement('button');
+            button.textContent = btn.name;
+            button.className = 'btn subject-nav-btn';
+            button.style.padding = '8px 14px';
+            button.style.fontSize = '13px';
+            button.style.fontWeight = '500';
+            button.style.minWidth = '70px';
+            button.style.textAlign = 'center';
+            button.style.background = 'var(--card-bg)';
+            button.style.border = '1px solid var(--card-border)';
+            button.style.borderRadius = '12px';
+            button.style.color = 'var(--text)';
+            button.style.cursor = 'pointer';
+            button.style.transition = 'var(--transition)';
+            button.style.backdropFilter = 'blur(12px)';
+            button.style.boxShadow = 'var(--shadow-sm)';
 
-    // ব্যাক বাটনের পরে ইনসার্ট করা (একই প্যারেন্টে)
-    if (backButton.nextSibling) {
-      parentElement.insertBefore(smallNav, backButton.nextSibling);
+            // হোভার ইফেক্ট
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-2px)';
+                button.style.borderColor = 'var(--primary)';
+                button.style.boxShadow = 'var(--shadow-md)';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translateY(0)';
+                button.style.borderColor = 'var(--card-border)';
+                button.style.boxShadow = 'var(--shadow-sm)';
+            });
+
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                btn.action();
+            });
+
+            buttonsDiv.appendChild(button);
+        });
+
+        // ব্যাক বাটনের পর বাটনগুলি বসাই
+        backButton.insertAdjacentElement('afterend', buttonsDiv);
+    }
+
+    // ==================== 2. ইউটিউব প্লে বাটনে ক্লিক করলেই ট্র্যাক করা ====================
+    function setupYouTubeButtonTracking() {
+        // ভিডিও প্লেয়ার পৃষ্ঠা দৃশ্যমান হলে বাটন খুঁজে ইভেন্ট লিসেনার যোগ করি
+        const videoPlayerPage = document.getElementById('video-player-page');
+        if (!videoPlayerPage) return;
+
+        // MutationObserver ব্যবহার করি যাতে বাটন পরে লোড হলেও ধরা পড়ে
+        const observer = new MutationObserver(() => {
+            const youtubeBtn = document.getElementById('youtubeBtn');
+            if (youtubeBtn && !youtubeBtn.hasAttribute('data-track-listener')) {
+                youtubeBtn.setAttribute('data-track-listener', 'true');
+                
+                // আসল ক্লিক ইভেন্ট সংরক্ষণ করি (যদি আগে থেকে থাকে)
+                const originalClick = youtubeBtn.onclick;
+                
+                // নতুন ইভেন্ট লিসেনার যোগ করি
+                youtubeBtn.addEventListener('click', function(e) {
+                    // ট্র্যাকিং করার চেষ্টা করি
+                    try {
+                        // বর্তমান ভিডিওর ট্র্যাক আইডি এবং টাইপ বের করি
+                        if (window.videoTrackId && window.videoType) {
+                            // ট্র্যাক আইটেম কল করি (যদি ইতিমধ্যে সম্পন্ন না হয়ে থাকে)
+                            if (typeof window.trackItem === 'function') {
+                                const completedItems = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+                                if (!completedItems.includes(window.videoTrackId)) {
+                                    window.trackItem(window.videoTrackId, window.videoType);
+                                    console.log(`✅ YouTube বাটনে ক্লিক করায় ট্র্যাক করা হয়েছে: ${window.videoTrackId}`);
+                                }
+                            }
+                        }
+                    } catch(err) {
+                        console.warn('ট্র্যাকিং করতে সমস্যা:', err);
+                    }
+                });
+            }
+        });
+        
+        observer.observe(videoPlayerPage, { childList: true, subtree: true });
+        
+        // যদি পৃষ্ঠা ইতিমধ্যে দৃশ্যমান থাকে, তাহলে এখনই চেক করি
+        if (videoPlayerPage.style.display === 'block') {
+            setTimeout(() => {
+                const youtubeBtn = document.getElementById('youtubeBtn');
+                if (youtubeBtn && !youtubeBtn.hasAttribute('data-track-listener')) {
+                    youtubeBtn.setAttribute('data-track-listener', 'true');
+                    youtubeBtn.addEventListener('click', function() {
+                        try {
+                            if (window.videoTrackId && window.videoType && typeof window.trackItem === 'function') {
+                                const completedItems = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+                                if (!completedItems.includes(window.videoTrackId)) {
+                                    window.trackItem(window.videoTrackId, window.videoType);
+                                }
+                            }
+                        } catch(err) {}
+                    });
+                }
+            }, 500);
+        }
+    }
+
+    // ==================== 3. পেজ পরিবর্তন মনিটরিং ====================
+    function observeSubjectPageVisibility() {
+        const subjectPage = document.getElementById('subject-page');
+        if (!subjectPage) return;
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    if (subjectPage.style.display === 'block') {
+                        setTimeout(injectSubjectNavButtons, 50);
+                    }
+                }
+            });
+        });
+
+        observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
+
+        if (subjectPage.style.display === 'block') {
+            setTimeout(injectSubjectNavButtons, 50);
+        }
+    }
+
+    // ==================== 4. ভিডিও প্লেয়ার পেজ দৃশ্যমান হলে সেটআপ ====================
+    function observeVideoPlayerVisibility() {
+        const videoPlayerPage = document.getElementById('video-player-page');
+        if (!videoPlayerPage) return;
+
+        const observer = new MutationObserver(() => {
+            if (videoPlayerPage.style.display === 'block') {
+                setTimeout(setupYouTubeButtonTracking, 300);
+            }
+        });
+        observer.observe(videoPlayerPage, { attributes: true, attributeFilter: ['style'] });
+
+        if (videoPlayerPage.style.display === 'block') {
+            setTimeout(setupYouTubeButtonTracking, 300);
+        }
+    }
+
+    // ==================== 5. পুরনো openVideoPlayer ফাংশন প্যাচ করা (নিশ্চিত করার জন্য) ====================
+    if (typeof window.openVideoPlayer === 'function') {
+        const originalOpenVideoPlayer = window.openVideoPlayer;
+        window.openVideoPlayer = function(url, trackId, type) {
+            // আসল ফাংশন কল করি
+            originalOpenVideoPlayer(url, trackId, type);
+            
+            // কিছুক্ষণ পর বাটন ট্র্যাকিং সেটআপ করি
+            setTimeout(setupYouTubeButtonTracking, 500);
+        };
+    }
+
+    // ==================== 6. সবকিছু শুরু করা ====================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            observeSubjectPageVisibility();
+            observeVideoPlayerVisibility();
+            setTimeout(injectSubjectNavButtons, 200);
+            setTimeout(setupYouTubeButtonTracking, 500);
+        });
     } else {
-      parentElement.appendChild(smallNav);
+        observeSubjectPageVisibility();
+        observeVideoPlayerVisibility();
+        setTimeout(injectSubjectNavButtons, 200);
+        setTimeout(setupYouTubeButtonTracking, 500);
     }
 
-    // ইভেন্ট লিসেনার যোগ করা
-    smallNav.querySelectorAll('.subject-nav-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = this.dataset.target;
-        
-        // সব পেজ হাইড করা
-        mainPage.style.display = 'none';
-        subjectPage.style.display = 'none';
-        classesPage.style.display = 'none';
-        missionsPage.style.display = 'none';
-        documentsPage.style.display = 'none';
-
-        // টার্গেট পেজ দেখানো
-        if (target === 'classes') {
-          classesPage.style.display = 'block';
-          if (typeof showClassesPage === 'function') {
-            showClassesPage();
-          } else {
-            // ফলব্যাক
-            if (typeof renderClassesPage === 'function') renderClassesPage();
-          }
-          window.currentPageState = 'classes';
-        } else if (target === 'missions') {
-          missionsPage.style.display = 'block';
-          if (typeof showMissionsPage === 'function') {
-            showMissionsPage();
-          } else {
-            if (typeof renderMissionsPage === 'function') renderMissionsPage();
-          }
-          window.currentPageState = 'missions';
-        } else if (target === 'documents') {
-          documentsPage.style.display = 'block';
-          if (typeof showDocumentsPage === 'function') {
-            showDocumentsPage();
-          } else {
-            if (typeof renderDocumentsPage === 'function') renderDocumentsPage();
-          }
-          window.currentPageState = 'documents';
-        }
-
-        // স্ক্রল টপে নেওয়া
-        window.scrollTo(0, 0);
-        
-        // হিস্ট্রি স্টেট আপডেট (যদি ফাংশন থাকে)
-        if (typeof history.pushState === 'function') {
-          try {
-            history.pushState({ page: target }, '');
-          } catch(e) {}
-        }
-      });
-    });
-  }
-
-  // ========== সাবজেক্ট পেজ দেখানোর সময় বাটন যোগ করার জন্য মনিটরিং ==========
-  function monitorSubjectPageVisibility() {
-    // MutationObserver ব্যবহার করে স্টাইল পরিবর্তন দেখা
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          if (subjectPage.style.display === 'block') {
-            // সাবজেক্ট পেজ দৃশ্যমান হলে বাটন যোগ করা
-            setTimeout(addNavigationButtonsToSubjectPage, 50);
-          }
-        }
-      });
-    });
-
-    observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
-
-    // showSubjectPage ফাংশন ওভাররাইড (যদি থাকে) - বিদ্যমান ফাংশন অক্ষুণ্ণ রেখে
-    if (typeof window.showSubjectPage === 'function') {
-      const originalShowSubjectPage = window.showSubjectPage;
-      window.showSubjectPage = function() {
-        // মূল ফাংশন কল
-        const result = originalShowSubjectPage.apply(this, arguments);
-        // বাটন যোগ করা
-        setTimeout(addNavigationButtonsToSubjectPage, 100);
-        return result;
-      };
+    // রিফ্রেশ বাটনে ক্লিক করলেও যেন কাজ করে
+    const refreshBtn = document.getElementById('refresh-data-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            setTimeout(injectSubjectNavButtons, 500);
+            setTimeout(setupYouTubeButtonTracking, 500);
+        });
     }
-
-    // পেজ লোডের সময় চেক
-    if (subjectPage.style.display === 'block') {
-      setTimeout(addNavigationButtonsToSubjectPage, 200);
-    }
-
-    // ব্যাক বাটনের মাধ্যমেও সাবজেক্ট পেজ ওপেন হতে পারে
-    const backButton = subjectPage.querySelector('.back-button');
-    if (backButton) {
-      backButton.addEventListener('click', function() {
-        // মেন পেজে ফেরার পর সাবজেক্ট পেজ হাইড - কিছু করার দরকার নেই
-      });
-    }
-
-    // নতুন মিশন L2 সিস্টেমের জন্যও কাজ করবে (একই subject-page ব্যবহার করে)
-    // তাই আলাদা কিছু করার প্রয়োজন নেই
-  }
-
-  // ========== ক্লাস/মিশন/ডকুমেন্ট পেজে শুধু মেন পেজ বাটন নিশ্চিত করা ==========
-  function ensureOnlyMainPageButtonOnFolders() {
-    // এই পেজগুলোতে কোনো ছোট নেভিগেশন বাটন যেন না থাকে
-    const pagesToCheck = [classesPage, missionsPage, documentsPage];
-    
-    pagesToCheck.forEach(page => {
-      if (!page) return;
-      
-      // আগে থেকে কোনো subject-nav-buttons থাকলে রিমুভ
-      const existingNav = page.querySelector('.subject-nav-buttons');
-      if (existingNav) existingNav.remove();
-      
-      // এই পেজগুলোর ব্যাক বাটন শুধু "মেন পেজ" আছে কিনা চেক
-      const backBtn = page.querySelector('.back-button');
-      if (backBtn && !backBtn.querySelector('span')?.textContent.includes('মেন পেজ')) {
-        // প্রয়োজন অনুযায়ী আপডেট (তবে মূল কোড পরিবর্তন করব না)
-      }
-    });
-  }
-
-  // পেজ পরিবর্তন মনিটর করে পরিষ্কার রাখা
-  function monitorFolderPages() {
-    const observer = new MutationObserver(function() {
-      ensureOnlyMainPageButtonOnFolders();
-    });
-    
-    [classesPage, missionsPage, documentsPage].forEach(page => {
-      if (page) observer.observe(page, { attributes: true, attributeFilter: ['style'] });
-    });
-    
-    // এখনই চেক
-    ensureOnlyMainPageButtonOnFolders();
-  }
-
-  // ========== ইনিশিয়ালাইজ ==========
-  function initialize() {
-    console.log('✅ Subject page navigation buttons system loaded');
-    
-    // সাবজেক্ট পেজ মনিটরিং শুরু
-    monitorSubjectPageVisibility();
-    
-    // ফোল্ডার পেজ মনিটরিং
-    monitorFolderPages();
-    
-    // যদি ইতিমধ্যে সাবজেক্ট পেজ ওপেন থাকে
-    if (subjectPage.style.display === 'block') {
-      addNavigationButtonsToSubjectPage();
-    }
-    
-    // মিশন L2 ট্যাব সিস্টেম থাকলে সেটাও সাপোর্ট করবে
-    // (যেহেতু subject-page ই ব্যবহার হয়)
-  }
-
-  // DOM লোড হলে শুরু
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initialize);
-  } else {
-    initialize();
-  }
-
 })();
 </script>
-<!-- ========== SUBJECT PAGE NAVIGATION BUTTONS END ========== -->
 </body>
 </html>
