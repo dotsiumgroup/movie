@@ -13650,6 +13650,139 @@ const SPECIAL_SUBJECTS = [
   fixBackButton();
 })();
   </script>
+<script>
+  // ========== সাবজেক্ট পেজে ছোট নেভিগেশন বাটন (ক্লাস, মিশন, ডকুমেন্ট) ==========
+(function() {
+  'use strict';
 
+  // ফাংশন: বাটন তিনটি তৈরি করে সাবজেক্ট পেজের হেডারে যুক্ত করবে
+  function addSmallNavButtons() {
+    // শুধুমাত্র subject-page দৃশ্যমান থাকলে কাজ করবে
+    const subjectPage = document.getElementById('subject-page');
+    if (!subjectPage || subjectPage.style.display !== 'block') return;
+
+    // আগে থেকেই বাটন যুক্ত আছে কিনা চেক
+    if (document.getElementById('smallNavContainer')) return;
+
+    // subject-page এর header খুঁজি
+    const header = subjectPage.querySelector('header .nav');
+    if (!header) return;
+
+    // "মেন পেজ" বাটনটি খুঁজি
+    const backButton = header.querySelector('.back-button');
+    if (!backButton) return;
+
+    // ছোট বাটনগুলোর কন্টেইনার
+    const container = document.createElement('div');
+    container.id = 'smallNavContainer';
+    container.style.cssText = `
+      display: flex;
+      gap: 8px;
+      margin-top: 5px;
+      justify-content: center;
+    `;
+
+    // বাটন তৈরি ও যোগ
+    const pages = [
+      { name: 'ক্লাস', target: 'classes' },
+      { name: 'মিশন', target: 'missions' },
+      { name: 'ডকুমেন্ট', target: 'documents' }
+    ];
+
+    pages.forEach(p => {
+      const btn = document.createElement('button');
+      btn.textContent = p.name;
+      btn.className = 'small-nav-btn';
+      btn.style.cssText = `
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid #00eaff66;
+        background: rgba(0, 234, 255, 0.1);
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+        flex: 0 1 auto;
+        min-width: 70px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      `;
+      btn.onmouseover = () => {
+        btn.style.background = '#00eaff33';
+        btn.style.borderColor = '#00eaff';
+        btn.style.transform = 'scale(1.05)';
+      };
+      btn.onmouseout = () => {
+        btn.style.background = 'rgba(0, 234, 255, 0.1)';
+        btn.style.borderColor = '#00eaff66';
+        btn.style.transform = 'scale(1)';
+      };
+      
+      btn.onclick = (e) => {
+        e.preventDefault();
+        // সংশ্লিষ্ট পেজ দেখানোর ফাংশন কল (আগে থেকেই আছে)
+        if (p.target === 'classes' && typeof showClassesPage === 'function') {
+          showClassesPage();
+        } else if (p.target === 'missions' && typeof showMissionsPage === 'function') {
+          showMissionsPage();
+        } else if (p.target === 'documents' && typeof showDocumentsPage === 'function') {
+          showDocumentsPage();
+        } else {
+          console.warn('পেজ ফাংশন পাওয়া যায়নি:', p.target);
+        }
+      };
+      
+      container.appendChild(btn);
+    });
+
+    // back-button এর পরে container যোগ করি (একই parent এ)
+    backButton.parentNode.insertBefore(container, backButton.nextSibling);
+  }
+
+  // ফাংশন: সাবজেক্ট পেজ বন্ধ হলে কন্টেইনার রিমুভ করব (যাতে অন্য পেজে না থাকে)
+  function removeSmallNavButtons() {
+    const container = document.getElementById('smallNavContainer');
+    if (container) container.remove();
+  }
+
+  // MutationObserver দিয়ে সাবজেক্ট পেজের দৃশ্যমানতা ও header পরিবর্তন মনিটর করি
+  const observer = new MutationObserver(() => {
+    const subjectPage = document.getElementById('subject-page');
+    if (subjectPage && subjectPage.style.display === 'block') {
+      // সাবজেক্ট পেজ ওপেন হয়েছে -> বাটন যোগ করার চেষ্টা (যদি header রেডি থাকে)
+      setTimeout(addSmallNavButtons, 50);
+    } else {
+      // সাবজেক্ট পেজ বন্ধ -> বাটন রিমুভ
+      removeSmallNavButtons();
+    }
+  });
+
+  // subject-page এর style attribute পরিবর্তন দেখব
+  const subjectPage = document.getElementById('subject-page');
+  if (subjectPage) {
+    observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // পেজ লোডে একবার চেক করি
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (subjectPage && subjectPage.style.display === 'block') {
+        setTimeout(addSmallNavButtons, 100);
+      }
+    });
+  } else {
+    if (subjectPage && subjectPage.style.display === 'block') {
+      setTimeout(addSmallNavButtons, 100);
+    }
+  }
+
+  // বিদ্যমান showSubjectPage ফাংশনকে ওভাররাইড না করে, শুধু নিশ্চিত করি যে বাটন যুক্ত হয়
+  // (কারণ উপরের observer ই যথেষ্ট)
+
+  console.log('✅ সাবজেক্ট পেজ নেভিগেশন বাটন সিস্টেম সক্রিয়');
+})();
+</script>
 </body>
 </html>
