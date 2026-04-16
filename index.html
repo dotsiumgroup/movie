@@ -13650,139 +13650,280 @@ const SPECIAL_SUBJECTS = [
   fixBackButton();
 })();
   </script>
+<!-- ========== SUBJECT PAGE SMALL NAVIGATION BUTTONS (ADD AT END) ========== -->
+<style>
+/* ছোট নেভিগেশন বাটন স্টাইল */
+.subject-nav-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding-left: 5px;
+}
+
+.subject-nav-btn {
+  background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+  border: 1px solid rgba(0, 234, 255, 0.3);
+  color: #00eaff;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 55px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+}
+
+.subject-nav-btn i {
+  margin-right: 3px;
+  font-size: 10px;
+}
+
+.subject-nav-btn:hover {
+  background: linear-gradient(135deg, #3a3a6a, #2a2a5a);
+  border-color: #00eaff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 234, 255, 0.2);
+  color: white;
+}
+
+.subject-nav-btn:active {
+  transform: translateY(0);
+}
+
+/* ব্যাক বাটনের নিচে পজিশনিং */
+#subject-page .nav.container {
+  flex-wrap: wrap;
+}
+
+#subject-page .back-button {
+  margin-bottom: 2px;
+}
+
+/* রেস্পন্সিভ */
+@media (max-width: 600px) {
+  .subject-nav-btn {
+    padding: 3px 6px;
+    font-size: 10px;
+    min-width: 45px;
+  }
+}
+</style>
+
 <script>
-  // ========== সাবজেক্ট পেজে ছোট নেভিগেশন বাটন (ক্লাস, মিশন, ডকুমেন্ট) ==========
 (function() {
   'use strict';
 
-  // ফাংশন: বাটন তিনটি তৈরি করে সাবজেক্ট পেজের হেডারে যুক্ত করবে
-  function addSmallNavButtons() {
-    // শুধুমাত্র subject-page দৃশ্যমান থাকলে কাজ করবে
-    const subjectPage = document.getElementById('subject-page');
-    if (!subjectPage || subjectPage.style.display !== 'block') return;
+  // পেজ এলিমেন্ট রেফারেন্স
+  const subjectPage = document.getElementById('subject-page');
+  const classesPage = document.getElementById('classes-page');
+  const missionsPage = document.getElementById('missions-page');
+  const documentsPage = document.getElementById('documents-page');
+  const mainPage = document.getElementById('main-page');
 
-    // আগে থেকেই বাটন যুক্ত আছে কিনা চেক
-    if (document.getElementById('smallNavContainer')) return;
+  // যদি প্রয়োজনীয় পেজ না থাকে তাহলে exit
+  if (!subjectPage || !classesPage || !missionsPage || !documentsPage) return;
 
-    // subject-page এর header খুঁজি
-    const header = subjectPage.querySelector('header .nav');
-    if (!header) return;
+  // ========== সাবজেক্ট পেজে ছোট নেভিগেশন বাটন যোগ করা ==========
+  function addNavigationButtonsToSubjectPage() {
+    // ইতিমধ্যে বাটন যোগ করা আছে কিনা চেক
+    if (document.getElementById('subjectNavButtons')) return;
 
-    // "মেন পেজ" বাটনটি খুঁজি
-    const backButton = header.querySelector('.back-button');
+    const navContainer = subjectPage.querySelector('header .nav.container');
+    if (!navContainer) return;
+
+    // ব্যাক বাটন খুঁজে বের করা
+    const backButton = navContainer.querySelector('.back-button');
     if (!backButton) return;
 
+    // ব্যাক বাটনের প্যারেন্ট (সাধারণত সরাসরি nav.container)
+    const parentElement = backButton.parentNode;
+
     // ছোট বাটনগুলোর কন্টেইনার
-    const container = document.createElement('div');
-    container.id = 'smallNavContainer';
-    container.style.cssText = `
-      display: flex;
-      gap: 8px;
-      margin-top: 5px;
-      justify-content: center;
+    const smallNav = document.createElement('div');
+    smallNav.id = 'subjectNavButtons';
+    smallNav.className = 'subject-nav-buttons';
+    smallNav.innerHTML = `
+      <button class="subject-nav-btn" data-target="classes"><i class="fas fa-book"></i> ক্লাস</button>
+      <button class="subject-nav-btn" data-target="missions"><i class="fas fa-bullseye"></i> মিশন</button>
+      <button class="subject-nav-btn" data-target="documents"><i class="fas fa-file-alt"></i> ডকুমেন্ট</button>
     `;
 
-    // বাটন তৈরি ও যোগ
-    const pages = [
-      { name: 'ক্লাস', target: 'classes' },
-      { name: 'মিশন', target: 'missions' },
-      { name: 'ডকুমেন্ট', target: 'documents' }
-    ];
+    // ব্যাক বাটনের পরে ইনসার্ট করা (একই প্যারেন্টে)
+    if (backButton.nextSibling) {
+      parentElement.insertBefore(smallNav, backButton.nextSibling);
+    } else {
+      parentElement.appendChild(smallNav);
+    }
 
-    pages.forEach(p => {
-      const btn = document.createElement('button');
-      btn.textContent = p.name;
-      btn.className = 'small-nav-btn';
-      btn.style.cssText = `
-        padding: 6px 12px;
-        border-radius: 20px;
-        border: 1px solid #00eaff66;
-        background: rgba(0, 234, 255, 0.1);
-        color: white;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        backdrop-filter: blur(5px);
-        transition: all 0.3s ease;
-        flex: 0 1 auto;
-        min-width: 70px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      `;
-      btn.onmouseover = () => {
-        btn.style.background = '#00eaff33';
-        btn.style.borderColor = '#00eaff';
-        btn.style.transform = 'scale(1.05)';
-      };
-      btn.onmouseout = () => {
-        btn.style.background = 'rgba(0, 234, 255, 0.1)';
-        btn.style.borderColor = '#00eaff66';
-        btn.style.transform = 'scale(1)';
-      };
-      
-      btn.onclick = (e) => {
+    // ইভেন্ট লিসেনার যোগ করা
+    smallNav.querySelectorAll('.subject-nav-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
         e.preventDefault();
-        // সংশ্লিষ্ট পেজ দেখানোর ফাংশন কল (আগে থেকেই আছে)
-        if (p.target === 'classes' && typeof showClassesPage === 'function') {
-          showClassesPage();
-        } else if (p.target === 'missions' && typeof showMissionsPage === 'function') {
-          showMissionsPage();
-        } else if (p.target === 'documents' && typeof showDocumentsPage === 'function') {
-          showDocumentsPage();
-        } else {
-          console.warn('পেজ ফাংশন পাওয়া যায়নি:', p.target);
+        const target = this.dataset.target;
+        
+        // সব পেজ হাইড করা
+        mainPage.style.display = 'none';
+        subjectPage.style.display = 'none';
+        classesPage.style.display = 'none';
+        missionsPage.style.display = 'none';
+        documentsPage.style.display = 'none';
+
+        // টার্গেট পেজ দেখানো
+        if (target === 'classes') {
+          classesPage.style.display = 'block';
+          if (typeof showClassesPage === 'function') {
+            showClassesPage();
+          } else {
+            // ফলব্যাক
+            if (typeof renderClassesPage === 'function') renderClassesPage();
+          }
+          window.currentPageState = 'classes';
+        } else if (target === 'missions') {
+          missionsPage.style.display = 'block';
+          if (typeof showMissionsPage === 'function') {
+            showMissionsPage();
+          } else {
+            if (typeof renderMissionsPage === 'function') renderMissionsPage();
+          }
+          window.currentPageState = 'missions';
+        } else if (target === 'documents') {
+          documentsPage.style.display = 'block';
+          if (typeof showDocumentsPage === 'function') {
+            showDocumentsPage();
+          } else {
+            if (typeof renderDocumentsPage === 'function') renderDocumentsPage();
+          }
+          window.currentPageState = 'documents';
         }
-      };
-      
-      container.appendChild(btn);
+
+        // স্ক্রল টপে নেওয়া
+        window.scrollTo(0, 0);
+        
+        // হিস্ট্রি স্টেট আপডেট (যদি ফাংশন থাকে)
+        if (typeof history.pushState === 'function') {
+          try {
+            history.pushState({ page: target }, '');
+          } catch(e) {}
+        }
+      });
+    });
+  }
+
+  // ========== সাবজেক্ট পেজ দেখানোর সময় বাটন যোগ করার জন্য মনিটরিং ==========
+  function monitorSubjectPageVisibility() {
+    // MutationObserver ব্যবহার করে স্টাইল পরিবর্তন দেখা
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          if (subjectPage.style.display === 'block') {
+            // সাবজেক্ট পেজ দৃশ্যমান হলে বাটন যোগ করা
+            setTimeout(addNavigationButtonsToSubjectPage, 50);
+          }
+        }
+      });
     });
 
-    // back-button এর পরে container যোগ করি (একই parent এ)
-    backButton.parentNode.insertBefore(container, backButton.nextSibling);
-  }
-
-  // ফাংশন: সাবজেক্ট পেজ বন্ধ হলে কন্টেইনার রিমুভ করব (যাতে অন্য পেজে না থাকে)
-  function removeSmallNavButtons() {
-    const container = document.getElementById('smallNavContainer');
-    if (container) container.remove();
-  }
-
-  // MutationObserver দিয়ে সাবজেক্ট পেজের দৃশ্যমানতা ও header পরিবর্তন মনিটর করি
-  const observer = new MutationObserver(() => {
-    const subjectPage = document.getElementById('subject-page');
-    if (subjectPage && subjectPage.style.display === 'block') {
-      // সাবজেক্ট পেজ ওপেন হয়েছে -> বাটন যোগ করার চেষ্টা (যদি header রেডি থাকে)
-      setTimeout(addSmallNavButtons, 50);
-    } else {
-      // সাবজেক্ট পেজ বন্ধ -> বাটন রিমুভ
-      removeSmallNavButtons();
-    }
-  });
-
-  // subject-page এর style attribute পরিবর্তন দেখব
-  const subjectPage = document.getElementById('subject-page');
-  if (subjectPage) {
     observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
+
+    // showSubjectPage ফাংশন ওভাররাইড (যদি থাকে) - বিদ্যমান ফাংশন অক্ষুণ্ণ রেখে
+    if (typeof window.showSubjectPage === 'function') {
+      const originalShowSubjectPage = window.showSubjectPage;
+      window.showSubjectPage = function() {
+        // মূল ফাংশন কল
+        const result = originalShowSubjectPage.apply(this, arguments);
+        // বাটন যোগ করা
+        setTimeout(addNavigationButtonsToSubjectPage, 100);
+        return result;
+      };
+    }
+
+    // পেজ লোডের সময় চেক
+    if (subjectPage.style.display === 'block') {
+      setTimeout(addNavigationButtonsToSubjectPage, 200);
+    }
+
+    // ব্যাক বাটনের মাধ্যমেও সাবজেক্ট পেজ ওপেন হতে পারে
+    const backButton = subjectPage.querySelector('.back-button');
+    if (backButton) {
+      backButton.addEventListener('click', function() {
+        // মেন পেজে ফেরার পর সাবজেক্ট পেজ হাইড - কিছু করার দরকার নেই
+      });
+    }
+
+    // নতুন মিশন L2 সিস্টেমের জন্যও কাজ করবে (একই subject-page ব্যবহার করে)
+    // তাই আলাদা কিছু করার প্রয়োজন নেই
   }
 
-  // পেজ লোডে একবার চেক করি
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      if (subjectPage && subjectPage.style.display === 'block') {
-        setTimeout(addSmallNavButtons, 100);
+  // ========== ক্লাস/মিশন/ডকুমেন্ট পেজে শুধু মেন পেজ বাটন নিশ্চিত করা ==========
+  function ensureOnlyMainPageButtonOnFolders() {
+    // এই পেজগুলোতে কোনো ছোট নেভিগেশন বাটন যেন না থাকে
+    const pagesToCheck = [classesPage, missionsPage, documentsPage];
+    
+    pagesToCheck.forEach(page => {
+      if (!page) return;
+      
+      // আগে থেকে কোনো subject-nav-buttons থাকলে রিমুভ
+      const existingNav = page.querySelector('.subject-nav-buttons');
+      if (existingNav) existingNav.remove();
+      
+      // এই পেজগুলোর ব্যাক বাটন শুধু "মেন পেজ" আছে কিনা চেক
+      const backBtn = page.querySelector('.back-button');
+      if (backBtn && !backBtn.querySelector('span')?.textContent.includes('মেন পেজ')) {
+        // প্রয়োজন অনুযায়ী আপডেট (তবে মূল কোড পরিবর্তন করব না)
       }
     });
-  } else {
-    if (subjectPage && subjectPage.style.display === 'block') {
-      setTimeout(addSmallNavButtons, 100);
-    }
   }
 
-  // বিদ্যমান showSubjectPage ফাংশনকে ওভাররাইড না করে, শুধু নিশ্চিত করি যে বাটন যুক্ত হয়
-  // (কারণ উপরের observer ই যথেষ্ট)
+  // পেজ পরিবর্তন মনিটর করে পরিষ্কার রাখা
+  function monitorFolderPages() {
+    const observer = new MutationObserver(function() {
+      ensureOnlyMainPageButtonOnFolders();
+    });
+    
+    [classesPage, missionsPage, documentsPage].forEach(page => {
+      if (page) observer.observe(page, { attributes: true, attributeFilter: ['style'] });
+    });
+    
+    // এখনই চেক
+    ensureOnlyMainPageButtonOnFolders();
+  }
 
-  console.log('✅ সাবজেক্ট পেজ নেভিগেশন বাটন সিস্টেম সক্রিয়');
+  // ========== ইনিশিয়ালাইজ ==========
+  function initialize() {
+    console.log('✅ Subject page navigation buttons system loaded');
+    
+    // সাবজেক্ট পেজ মনিটরিং শুরু
+    monitorSubjectPageVisibility();
+    
+    // ফোল্ডার পেজ মনিটরিং
+    monitorFolderPages();
+    
+    // যদি ইতিমধ্যে সাবজেক্ট পেজ ওপেন থাকে
+    if (subjectPage.style.display === 'block') {
+      addNavigationButtonsToSubjectPage();
+    }
+    
+    // মিশন L2 ট্যাব সিস্টেম থাকলে সেটাও সাপোর্ট করবে
+    // (যেহেতু subject-page ই ব্যবহার হয়)
+  }
+
+  // DOM লোড হলে শুরু
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+
 })();
 </script>
+<!-- ========== SUBJECT PAGE NAVIGATION BUTTONS END ========== -->
 </body>
 </html>
