@@ -13599,17 +13599,15 @@ const SPECIAL_SUBJECTS = [
 
 })();
 </script>
-
 <script>
 (function() {
     'use strict';
 
-    // ==================== 1. সাবজেক্ট পেজে নেভিগেশন বাটন যুক্ত করা ====================
+    // ==================== 1. সাবজেক্ট পেজে নেভিগেশন বাটন যুক্ত করা (সেন্টার + ব্যাক অ্যারো) ====================
     function injectSubjectNavButtons() {
         const subjectPage = document.getElementById('subject-page');
-        if (!subjectPage | subjectPage.style.display !== 'block') return;
+        if (!subjectPage || subjectPage.style.display !== 'block') return;
 
-        // যদি ইতিমধ্যে বাটন থাকে তবে আর যোগ করব না
         if (document.querySelector('.subject-nav-buttons')) return;
 
         const navContainer = subjectPage.querySelector('nav.nav.container');
@@ -13618,28 +13616,41 @@ const SPECIAL_SUBJECTS = [
         const backButton = navContainer.querySelector('.brand.back-button');
         if (!backButton) return;
 
-        // বাটনগুলোর জন্য ধারক তৈরি
+        // ধারক ডিভ
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'subject-nav-buttons';
         buttonsDiv.style.display = 'flex';
         buttonsDiv.style.gap = '8px';
-        buttonsDiv.style.marginLeft = '16px'; // ব্যাক বাটনের পর সামান্য ফাঁকা
+        buttonsDiv.style.marginLeft = '16px';
+        buttonsDiv.style.alignItems = 'center';
 
-        // তিনটি বাটন তৈরি
+        // তিনটি বাটন (ব্যাক অ্যারো + টেক্সট)
         const buttons = [
-            { name: 'ক্লাস', action: () => window.showClassesPage && window.showClassesPage() },
-            { name: 'মিশন', action: () => window.showMissionsPage && window.showMissionsPage() },
-            { name: 'ডকুমেন্ট', action: () => window.showDocumentsPage && window.showDocumentsPage() }
+            { name: 'ক্লাস', action: () => {
+                if (typeof window.showClassesPage === 'function') window.showClassesPage();
+                else console.warn('showClassesPage not found');
+            }},
+            { name: 'মিশন', action: () => {
+                if (typeof window.showMissionsPage === 'function') window.showMissionsPage();
+                else console.warn('showMissionsPage not found');
+            }},
+            { name: 'ডকুমেন্ট', action: () => {
+                if (typeof window.showDocumentsPage === 'function') window.showDocumentsPage();
+                else console.warn('showDocumentsPage not found');
+            }}
         ];
 
         buttons.forEach(btn => {
             const button = document.createElement('button');
-            button.textContent = btn.name;
             button.className = 'btn subject-nav-btn';
-            button.style.padding = '8px 14px';
+            button.style.display = 'inline-flex';
+            button.style.alignItems = 'center';
+            button.style.justifyContent = 'center';
+            button.style.gap = '6px';
+            button.style.padding = '8px 12px';
             button.style.fontSize = '13px';
             button.style.fontWeight = '500';
-            button.style.minWidth = '70px';
+            button.style.minWidth = '80px';
             button.style.textAlign = 'center';
             button.style.background = 'var(--card-bg)';
             button.style.border = '1px solid var(--card-border)';
@@ -13649,6 +13660,18 @@ const SPECIAL_SUBJECTS = [
             button.style.transition = 'var(--transition)';
             button.style.backdropFilter = 'blur(12px)';
             button.style.boxShadow = 'var(--shadow-sm)';
+
+            // ব্যাক অ্যারো আইকন
+            const arrowSpan = document.createElement('span');
+            arrowSpan.innerHTML = '←';
+            arrowSpan.style.fontSize = '14px';
+            arrowSpan.style.fontWeight = 'bold';
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = btn.name;
+            
+            button.appendChild(arrowSpan);
+            button.appendChild(textSpan);
 
             // হোভার ইফেক্ট
             button.addEventListener('mouseenter', () => {
@@ -13670,143 +13693,201 @@ const SPECIAL_SUBJECTS = [
             buttonsDiv.appendChild(button);
         });
 
-        // ব্যাক বাটনের পর বাটনগুলি বসাই
         backButton.insertAdjacentElement('afterend', buttonsDiv);
     }
 
-    // ==================== 2. ইউটিউব প্লে বাটনে ক্লিক করলেই ট্র্যাক করা ====================
-    function setupYouTubeButtonTracking() {
-        // ভিডিও প্লেয়ার পৃষ্ঠা দৃশ্যমান হলে বাটন খুঁজে ইভেন্ট লিসেনার যোগ করি
-        const videoPlayerPage = document.getElementById('video-player-page');
-        if (!videoPlayerPage) return;
+    // ==================== 2. নির্ভরযোগ্য ইউটিউব বাটন ট্র্যাকিং ====================
+    function trackViaYouTubeButton() {
+        // সব সম্ভাব্য আইডি চেক করি (সাধারণ ও লাইভ প্লেয়ার)
+        const possibleIds = ['youtubeBtn', 'alim-youtube-btn'];
+        let youtubeBtn = null;
+        for (let id of possibleIds) {
+            const btn = document.getElementById(id);
+            if (btn) {
+                youtubeBtn = btn;
+                break;
+            }
+        }
+        if (!youtubeBtn) return false;
+        if (youtubeBtn.hasAttribute('data-track-fixed')) return true;
 
-        // MutationObserver ব্যবহার করি যাতে বাটন পরে লোড হলেও ধরা পড়ে
-        const observer = new MutationObserver(() => {
-            const youtubeBtn = document.getElementById('youtubeBtn');
-            if (youtubeBtn && !youtubeBtn.hasAttribute('data-track-listener')) {
-                youtubeBtn.setAttribute('data-track-listener', 'true');
-                
-                // আসল ক্লিক ইভেন্ট সংরক্ষণ করি (যদি আগে থেকে থাকে)
-                const originalClick = youtubeBtn.onclick;
-                
-                // নতুন ইভেন্ট লিসেনার যোগ করি
-                youtubeBtn.addEventListener('click', function(e) {
-                    // ট্র্যাকিং করার চেষ্টা করি
-                    try {
-                        // বর্তমান ভিডিওর ট্র্যাক আইডি এবং টাইপ বের করি
-                        if (window.videoTrackId && window.videoType) {
-                            // ট্র্যাক আইটেম কল করি (যদি ইতিমধ্যে সম্পন্ন না হয়ে থাকে)
-                            if (typeof window.trackItem === 'function') {
-                                const completedItems = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
-                                if (!completedItems.includes(window.videoTrackId)) {
-                                    window.trackItem(window.videoTrackId, window.videoType);
-                                    console.log(`✅ YouTube বাটনে ক্লিক করায় ট্র্যাক করা হয়েছে: ${window.videoTrackId}`);
-                                }
+        // ক্লিক ইভেন্ট
+        youtubeBtn.addEventListener('click', function(e) {
+            // বর্তমান ভিডিওর ট্র্যাকিং তথ্য বের করি
+            let trackId = null;
+            let trackType = null;
+
+            // ১. window ভেরিয়েবল থেকে
+            if (window.videoTrackId && window.videoType) {
+                trackId = window.videoTrackId;
+                trackType = window.videoType;
+            }
+            // ২. লোকাল স্টোরেজের সর্বশেষ দেখা ভিডিও থেকে (যদি window না থাকে)
+            else {
+                try {
+                    const lastVideo = localStorage.getItem('last_video_track');
+                    if (lastVideo) {
+                        const parsed = JSON.parse(lastVideo);
+                        trackId = parsed.id;
+                        trackType = parsed.type;
+                    }
+                } catch(e) {}
+            }
+
+            if (trackId && trackType && typeof window.trackItem === 'function') {
+                const completed = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+                if (!completed.includes(trackId)) {
+                    window.trackItem(trackId, trackType);
+                    // সংরক্ষণ করে রাখি যাতে বারবার ট্র্যাক না হয়
+                    localStorage.setItem('last_tracked_via_youtube', trackId);
+                    console.log(`✅ YouTube বাটনে ক্লিক: ট্র্যাক সম্পন্ন (${trackId})`);
+                }
+            } else {
+                console.warn('ট্র্যাকিং তথ্য পাওয়া যায়নি');
+            }
+        });
+
+        youtubeBtn.setAttribute('data-track-fixed', 'true');
+        return true;
+    }
+
+    // ভিডিও প্লেয়ার খোলার সময় ট্র্যাকিং সেটআপ ও ভেরিয়েবল সংরক্ষণ
+    function patchOpenVideoPlayer() {
+        if (typeof window.openVideoPlayer !== 'function') return;
+        const original = window.openVideoPlayer;
+        window.openVideoPlayer = function(url, trackId, type) {
+            // সংরক্ষণ করি
+            window.videoTrackId = trackId;
+            window.videoType = type;
+            try {
+                localStorage.setItem('last_video_track', JSON.stringify({ id: trackId, type: type }));
+            } catch(e) {}
+            original(url, trackId, type);
+            // বাটন ট্র্যাকিং সেটআপ
+            setTimeout(() => {
+                trackViaYouTubeButton();
+                // যদি লাইভ প্লেয়ার হয়, সেখানেও চেষ্টা
+                const liveBtn = document.getElementById('alim-youtube-btn');
+                if (liveBtn && !liveBtn.hasAttribute('data-track-fixed')) {
+                    liveBtn.addEventListener('click', () => {
+                        if (window.videoTrackId && window.videoType && typeof window.trackItem === 'function') {
+                            const completed = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+                            if (!completed.includes(window.videoTrackId)) {
+                                window.trackItem(window.videoTrackId, window.videoType);
                             }
                         }
-                    } catch(err) {
-                        console.warn('ট্র্যাকিং করতে সমস্যা:', err);
-                    }
-                });
-            }
-        });
-        
-        observer.observe(videoPlayerPage, { childList: true, subtree: true });
-        
-        // যদি পৃষ্ঠা ইতিমধ্যে দৃশ্যমান থাকে, তাহলে এখনই চেক করি
-        if (videoPlayerPage.style.display === 'block') {
-            setTimeout(() => {
-                const youtubeBtn = document.getElementById('youtubeBtn');
-                if (youtubeBtn && !youtubeBtn.hasAttribute('data-track-listener')) {
-                    youtubeBtn.setAttribute('data-track-listener', 'true');
-                    youtubeBtn.addEventListener('click', function() {
-                        try {
-                            if (window.videoTrackId && window.videoType && typeof window.trackItem === 'function') {
-                                const completedItems = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
-                                if (!completedItems.includes(window.videoTrackId)) {
-                                    window.trackItem(window.videoTrackId, window.videoType);
-                                }
-                            }
-                        } catch(err) {}
                     });
+                    liveBtn.setAttribute('data-track-fixed', 'true');
                 }
-            }, 500);
-        }
-    }
-
-    // ==================== 3. পেজ পরিবর্তন মনিটরিং ====================
-    function observeSubjectPageVisibility() {
-        const subjectPage = document.getElementById('subject-page');
-        if (!subjectPage) return;
-
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    if (subjectPage.style.display === 'block') {
-                        setTimeout(injectSubjectNavButtons, 50);
-                    }
-                }
-            });
-        });
-
-        observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
-
-        if (subjectPage.style.display === 'block') {
-            setTimeout(injectSubjectNavButtons, 50);
-        }
-    }
-
-    // ==================== 4. ভিডিও প্লেয়ার পেজ দৃশ্যমান হলে সেটআপ ====================
-    function observeVideoPlayerVisibility() {
-        const videoPlayerPage = document.getElementById('video-player-page');
-        if (!videoPlayerPage) return;
-
-        const observer = new MutationObserver(() => {
-            if (videoPlayerPage.style.display === 'block') {
-                setTimeout(setupYouTubeButtonTracking, 300);
-            }
-        });
-        observer.observe(videoPlayerPage, { attributes: true, attributeFilter: ['style'] });
-
-        if (videoPlayerPage.style.display === 'block') {
-            setTimeout(setupYouTubeButtonTracking, 300);
-        }
-    }
-
-    // ==================== 5. পুরনো openVideoPlayer ফাংশন প্যাচ করা (নিশ্চিত করার জন্য) ====================
-    if (typeof window.openVideoPlayer === 'function') {
-        const originalOpenVideoPlayer = window.openVideoPlayer;
-        window.openVideoPlayer = function(url, trackId, type) {
-            // আসল ফাংশন কল করি
-            originalOpenVideoPlayer(url, trackId, type);
-            
-            // কিছুক্ষণ পর বাটন ট্র্যাকিং সেটআপ করি
-            setTimeout(setupYouTubeButtonTracking, 500);
+            }, 800);
         };
     }
 
-    // ==================== 6. সবকিছু শুরু করা ====================
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            observeSubjectPageVisibility();
-            observeVideoPlayerVisibility();
-            setTimeout(injectSubjectNavButtons, 200);
-            setTimeout(setupYouTubeButtonTracking, 500);
-        });
-    } else {
-        observeSubjectPageVisibility();
-        observeVideoPlayerVisibility();
-        setTimeout(injectSubjectNavButtons, 200);
-        setTimeout(setupYouTubeButtonTracking, 500);
+    // ==================== 3. মিশন পেজ ঠিক করা (L2 দেখানোর জন্য) ====================
+    function fixMissionsPage() {
+        // showMissionsPage ফাংশন যদি না থাকে, তাহলে ডিফাইন করি
+        if (typeof window.showMissionsPage !== 'function') {
+            window.showMissionsPage = function() {
+                // প্রথমে main পেজ লুকিয়ে missions-page দেখাই
+                const mainPage = document.getElementById('main-page');
+                const missionsPage = document.getElementById('missions-page');
+                if (mainPage) mainPage.style.display = 'none';
+                if (missionsPage) {
+                    missionsPage.style.display = 'block';
+                    // নিউ মিশন সিস্টেমের ট্যাব ও লোডিং ট্রিগার
+                    if (typeof window.setupMissionsL2 === 'function') {
+                        window.setupMissionsL2();
+                    } else {
+                        // যদি setupMissionsL2 না থাকে, তাহলে ম্যানুয়ালি রেন্ডার ট্রিগার
+                        if (window.allMissions && window.allMissions.length === 0 && typeof window.loadAndRender === 'function') {
+                            window.loadAndRender();
+                        }
+                        // ট্যাব সক্রিয় করা (ডিফল্ট L2)
+                        const newTab = document.querySelector('#missionTabsContainer .mission-tab[data-tab="new"]');
+                        if (newTab) newTab.click();
+                    }
+                }
+                window.currentPageState = 'missions';
+                if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+            };
+        } else {
+            // ইতিমধ্যে থাকলে ওভাররাইড করি যাতে L2 নিশ্চিত হয়
+            const originalMissions = window.showMissionsPage;
+            window.showMissionsPage = function() {
+                originalMissions();
+                setTimeout(() => {
+                    const newTab = document.querySelector('#missionTabsContainer .mission-tab[data-tab="new"]');
+                    if (newTab && !newTab.classList.contains('active')) newTab.click();
+                    if (window.allMissions && window.allMissions.length === 0 && typeof window.loadAndRender === 'function') {
+                        window.loadAndRender();
+                    }
+                }, 100);
+            };
+        }
     }
 
-    // রিফ্রেশ বাটনে ক্লিক করলেও যেন কাজ করে
-    const refreshBtn = document.getElementById('refresh-data-btn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            setTimeout(injectSubjectNavButtons, 500);
-            setTimeout(setupYouTubeButtonTracking, 500);
+    // ==================== 4. পেজ ভিজিবিলিটি মনিটরিং ====================
+    function observeSubjectPage() {
+        const subjectPage = document.getElementById('subject-page');
+        if (!subjectPage) return;
+        const observer = new MutationObserver(() => {
+            if (subjectPage.style.display === 'block') {
+                setTimeout(injectSubjectNavButtons, 50);
+            }
         });
+        observer.observe(subjectPage, { attributes: true, attributeFilter: ['style'] });
+        if (subjectPage.style.display === 'block') setTimeout(injectSubjectNavButtons, 50);
+    }
+
+    function observeVideoPlayer() {
+        const vp = document.getElementById('video-player-page');
+        if (!vp) return;
+        const observer = new MutationObserver(() => {
+            if (vp.style.display === 'block') {
+                setTimeout(() => trackViaYouTubeButton(), 500);
+            }
+        });
+        observer.observe(vp, { attributes: true, attributeFilter: ['style'] });
+        if (vp.style.display === 'block') setTimeout(() => trackViaYouTubeButton(), 500);
+    }
+
+    // ==================== 5. ড্রাইভ প্লেয়ারের জন্যও ট্র্যাকিং (ঐচ্ছিক) ====================
+    function patchOpenDrivePlayer() {
+        if (typeof window.openDrivePlayer !== 'function') return;
+        const originalDrive = window.openDrivePlayer;
+        window.openDrivePlayer = function(url, trackId, type) {
+            // ড্রাইভ ফাইল সরাসরি ট্র্যাক করা যায় (ক্লিকেই সম্পন্ন)
+            if (typeof window.trackItem === 'function') {
+                const completed = JSON.parse(localStorage.getItem('alim26_dashboard_completed_items') || '[]');
+                if (!completed.includes(trackId)) {
+                    window.trackItem(trackId, type);
+                }
+            }
+            originalDrive(url, trackId, type);
+        };
+    }
+
+    // ==================== 6. সবকিছু শুরু ====================
+    function init() {
+        patchOpenVideoPlayer();
+        patchOpenDrivePlayer();
+        fixMissionsPage();
+        observeSubjectPage();
+        observeVideoPlayer();
+        setTimeout(injectSubjectNavButtons, 300);
+        setTimeout(trackViaYouTubeButton, 800);
+        // প্রতি 3 সেকেন্ডে চেষ্টা (যাতে পরে লোড হওয়া বাটনও ধরা পড়ে)
+        setInterval(() => {
+            if (document.getElementById('video-player-page')?.style.display === 'block') {
+                trackViaYouTubeButton();
+            }
+        }, 3000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();
 </script>
