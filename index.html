@@ -3775,9 +3775,7 @@
     </div>
 
     <button class="main-btn" id="main-website-btn">আপনার এনরোলকৃত কোর্স</button>
-<button onclick="enableNotifications()" style="padding: 12px 24px; background: #007BFF; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-  🔔 নোটিফিকেশন চালু করুন
-</button>
+
     <!-- MOTIVATION AREA -->
     <div class="motivation-box">
       <p id="motivationText">শেখা মানে প্রতিদিন এক ধাপ এগিয়ে যাওয়া।</p>
@@ -13601,121 +13599,7 @@ const SPECIAL_SUBJECTS = [
 
 })();
 </script>
-  
-  <script>
-(function() {
-  // তিনটি ফোল্ডারের ক্লিক ট্র্যাক করা
-  const folderMap = {
-    'classes-folder': 'classes',
-    'missions-folder': 'missions',
-    'documents-folder': 'documents'
-  };
-  for (let id in folderMap) {
-    let el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('click', function() {
-        sessionStorage.setItem('lastFolder', folderMap[id]);
-      });
-    }
-  }
-  // ব্যাক বাটন কাস্টমাইজ করা
-  function fixBackButton() {
-    let backBtn = document.getElementById('back-to-main');
-    if (!backBtn) return;
-    let last = sessionStorage.getItem('lastFolder') || 'main';
-    let subjectPage = document.getElementById('subject-page');
-    if (!subjectPage || subjectPage.style.display !== 'block') return;
-    let text, action;
-    if (last === 'classes') {
-      text = 'ক্লাস পেজ';
-      action = () => { if (typeof showClassesPage === 'function') showClassesPage(); else location.reload(); };
-    } else if (last === 'missions') {
-      text = 'মিশন পেজ';
-      action = () => { if (typeof showMissionsPage === 'function') showMissionsPage(); else location.reload(); };
-    } else if (last === 'documents') {
-      text = 'ডকুমেন্ট পেজ';
-      action = () => { if (typeof showDocumentsPage === 'function') showDocumentsPage(); else location.reload(); };
-    } else {
-      text = 'মেন পেজ';
-      action = () => { if (typeof returnToMainPage === 'function') returnToMainPage(); else location.reload(); };
-    }
-    if (backBtn.innerText.includes(text)) return;
-    let newBtn = backBtn.cloneNode(true);
-    backBtn.parentNode.replaceChild(newBtn, backBtn);
-    newBtn.innerHTML = '<i class="fas fa-arrow-left"></i> <span class="bangla-font">' + text + '</span>';
-    newBtn.onclick = (e) => { e.preventDefault(); action(); };
-  }
-  // পেজ পরিবর্তন দেখার জন্য
-  new MutationObserver(() => fixBackButton()).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
-  fixBackButton();
-})();
-  </script>
-<!-- ========== SUBJECT PAGE SMALL NAVIGATION BUTTONS (ADD AT END) ========== -->
-<style>
-/* ছোট নেভিগেশন বাটন স্টাইল */
-.subject-nav-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  padding-left: 5px;
-}
 
-.subject-nav-btn {
-  background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-  border: 1px solid rgba(0, 234, 255, 0.3);
-  color: #00eaff;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 55px;
-  text-align: center;
-  backdrop-filter: blur(5px);
-}
-
-.subject-nav-btn i {
-  margin-right: 3px;
-  font-size: 10px;
-}
-
-.subject-nav-btn:hover {
-  background: linear-gradient(135deg, #3a3a6a, #2a2a5a);
-  border-color: #00eaff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 234, 255, 0.2);
-  color: white;
-}
-
-.subject-nav-btn:active {
-  transform: translateY(0);
-}
-
-/* ব্যাক বাটনের নিচে পজিশনিং */
-#subject-page .nav.container {
-  flex-wrap: wrap;
-}
-
-#subject-page .back-button {
-  margin-bottom: 2px;
-}
-
-/* রেস্পন্সিভ */
-@media (max-width: 600px) {
-  .subject-nav-btn {
-    padding: 3px 6px;
-    font-size: 10px;
-    min-width: 45px;
-  }
-}
-</style>
 <script>
 (function() {
     'use strict';
@@ -13723,7 +13607,7 @@ const SPECIAL_SUBJECTS = [
     // ==================== 1. সাবজেক্ট পেজে নেভিগেশন বাটন যুক্ত করা ====================
     function injectSubjectNavButtons() {
         const subjectPage = document.getElementById('subject-page');
-        if (!subjectPage || subjectPage.style.display !== 'block') return;
+        if (!subjectPage | subjectPage.style.display !== 'block') return;
 
         // যদি ইতিমধ্যে বাটন থাকে তবে আর যোগ করব না
         if (document.querySelector('.subject-nav-buttons')) return;
@@ -13926,5 +13810,5 @@ const SPECIAL_SUBJECTS = [
     }
 })();
 </script>
-</body>
+  </body>
 </html>
