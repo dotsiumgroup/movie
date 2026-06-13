@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-   
+
+    
+
     <title>RAS LIVE TV</title>
 
     <link rel="shortcut icon" type="image/x-icon" href="https://i.postimg.cc/L6W7zDRC/file-00000000da6472098c023a1c13aaad41.png">
@@ -46,6 +48,263 @@
             display: block;
             background: #000;
         }
+    /* ===== RAS LIVE TV — লোডিং ওভারলে CSS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600&display=swap');
+
+#rasLoadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: #050505;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+  overflow: hidden;
+  border-radius: inherit;
+}
+#rasLoadingOverlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── Background aurora layer ── */
+#rasLoadingOverlay .ras-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(255,120,0,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 40%, rgba(0,180,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 100%, rgba(255,60,0,0.06) 0%, transparent 70%);
+  animation: rasAurora 6s ease-in-out infinite alternate;
+}
+@keyframes rasAurora {
+  0%   { opacity: 0.6; transform: scale(1)   rotate(0deg);   }
+  50%  { opacity: 1;   transform: scale(1.05) rotate(1deg);  }
+  100% { opacity: 0.7; transform: scale(1)   rotate(-1deg);  }
+}
+
+/* ── Scanline texture ── */
+#rasLoadingOverlay .ras-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.015) 2px,
+    rgba(255,255,255,0.015) 4px
+  );
+  pointer-events: none;
+}
+
+/* ── Corner decorators ── */
+#rasLoadingOverlay .ras-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  opacity: 0.5;
+}
+#rasLoadingOverlay .ras-corner::before,
+#rasLoadingOverlay .ras-corner::after {
+  content: '';
+  position: absolute;
+  background: #ff7800;
+}
+#rasLoadingOverlay .ras-corner::before { width: 100%; height: 2px; top: 0; left: 0; }
+#rasLoadingOverlay .ras-corner::after  { width: 2px; height: 100%; top: 0; left: 0; }
+#rasLoadingOverlay .ras-corner.tl { top: 14px; left: 14px; }
+#rasLoadingOverlay .ras-corner.tr { top: 14px; right: 14px; transform: scaleX(-1); }
+#rasLoadingOverlay .ras-corner.bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
+#rasLoadingOverlay .ras-corner.br { bottom: 14px; right: 14px; transform: scale(-1); }
+
+/* ── Central content ── */
+#rasLoadingOverlay .ras-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* ── Live badge ── */
+#rasLoadingOverlay .ras-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,80,0,0.15);
+  border: 1px solid rgba(255,80,0,0.4);
+  border-radius: 3px;
+  padding: 3px 10px 3px 8px;
+  margin-bottom: 14px;
+  animation: rasFadeUp 0.6s 0.1s both ease-out;
+}
+#rasLoadingOverlay .ras-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4500;
+  box-shadow: 0 0 8px #ff4500;
+  animation: rasDotPulse 1.2s ease-in-out infinite;
+}
+@keyframes rasDotPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px #ff4500; }
+  50%       { opacity: 0.4; box-shadow: 0 0 2px #ff4500; }
+}
+#rasLoadingOverlay .ras-badge-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #ff6030;
+  text-transform: uppercase;
+}
+
+/* ── Logo wordmark ── */
+#rasLoadingOverlay .ras-wordmark {
+  font-family: 'Bebas Neue', 'Impact', sans-serif;
+  font-size: clamp(38px, 8vw, 56px);
+  letter-spacing: 6px;
+  line-height: 1;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  animation: rasFadeUp 0.6s 0.2s both ease-out;
+  position: relative;
+  overflow: hidden;
+}
+#rasLoadingOverlay .ras-wordmark .w-ras {
+  color: #ffffff;
+  text-shadow: 0 0 40px rgba(255,255,255,0.2);
+}
+#rasLoadingOverlay .ras-wordmark .w-live {
+  color: #ff7800;
+  text-shadow: 0 0 30px rgba(255,120,0,0.6), 0 0 60px rgba(255,80,0,0.3);
+  position: relative;
+}
+#rasLoadingOverlay .ras-wordmark .w-tv {
+  color: #00c8ff;
+  font-size: 0.65em;
+  text-shadow: 0 0 25px rgba(0,200,255,0.5);
+  align-self: center;
+}
+
+/* Shimmer sweep on wordmark */
+#rasLoadingOverlay .ras-wordmark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+  animation: rasShimmer 3s 1s ease-in-out infinite;
+}
+@keyframes rasShimmer {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%);  }
+}
+
+/* ── Divider line ── */
+#rasLoadingOverlay .ras-line {
+  width: 180px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,120,0,0.6), rgba(0,200,255,0.4), transparent);
+  margin: 14px 0 20px;
+  animation: rasFadeUp 0.5s 0.35s both ease-out;
+}
+
+/* ── Arc spinner ── */
+#rasLoadingOverlay .ras-arc-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  animation: rasFadeUp 0.5s 0.4s both ease-out;
+}
+#rasLoadingOverlay .ras-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+#rasLoadingOverlay .ras-arc-1 {
+  border-top-color: #ff7800;
+  border-right-color: rgba(255,120,0,0.3);
+  animation: rasArcSpin 1s linear infinite;
+}
+#rasLoadingOverlay .ras-arc-2 {
+  inset: 7px;
+  border-bottom-color: #00c8ff;
+  border-left-color: rgba(0,200,255,0.3);
+  animation: rasArcSpin 0.7s linear infinite reverse;
+}
+#rasLoadingOverlay .ras-arc-3 {
+  inset: 14px;
+  border-top-color: rgba(255,255,255,0.6);
+  animation: rasArcSpin 0.5s linear infinite;
+}
+/* center dot */
+#rasLoadingOverlay .ras-arc-wrap::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px #fff;
+}
+@keyframes rasArcSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Progress bar ── */
+#rasLoadingOverlay .ras-progress-track {
+  width: 160px;
+  height: 2px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  margin-top: 20px;
+  overflow: hidden;
+  animation: rasFadeUp 0.5s 0.5s both ease-out;
+}
+#rasLoadingOverlay .ras-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff7800, #ff4400, #00c8ff);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255,120,0,0.6);
+  animation: rasProgress 8s cubic-bezier(0.1,0,0.4,1) forwards;
+}
+@keyframes rasProgress {
+  0%   { width: 0%;   }
+  40%  { width: 55%;  }
+  70%  { width: 78%;  }
+  90%  { width: 92%;  }
+  100% { width: 99%;  }
+}
+
+/* ── Status text ── */
+#rasLoadingOverlay .ras-status {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 12px;
+  text-transform: uppercase;
+  animation: rasFadeUp 0.5s 0.6s both ease-out, rasStatusPulse 2s 1s ease-in-out infinite;
+}
+@keyframes rasStatusPulse {
+  0%, 100% { color: rgba(255,255,255,0.3); }
+  50%       { color: rgba(255,120,0,0.7);  }
+}
+
+/* ── Shared fade-up entry ── */
+@keyframes rasFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
 
         /* ===== CHANNEL LIST (গোলাকার, ওভারল্যাপ মুক্ত) ===== */
 .channel-list {
@@ -445,1682 +704,1185 @@
                 <div class="embed-responsive embed-responsive-16by9">
                     <video id="playerFrame" class="embed-responsive-item" controls autoplay playsinline></video>
                 </div>
+            </div>
+<!-- ===== RAS LIVE TV — লোডিং ওভারলে HTML ===== -->
+<div id="rasLoadingOverlay" class="hidden">
+  <div class="ras-bg"></div>
+  <div class="ras-scan"></div>
+
+  <div class="ras-corner tl"></div>
+  <div class="ras-corner tr"></div>
+  <div class="ras-corner bl"></div>
+  <div class="ras-corner br"></div>
+
+  <div class="ras-center">
+    <div class="ras-badge">
+      <div class="ras-badge-dot"></div>
+      <span class="ras-badge-text">Live Streaming</span>
     </div>
 
-    <!-- CHANNEL LIST -->
-<div class="col-xs-12 col-md-2 channel-list">
-    <ul id="channel-container">
-        <!-- 1 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=47201c446d2e7b01b8b0736ba1240fbb')">
-                <img src="https://s3.aynaott.com/storage/dbc585f70a60b9855b6e13a8ce4cb6f4" alt="T Sports">
-            </a>
-        </li>
-        <!-- 2 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/PtvSports/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=bde375cd27166d882ccdf4ffe5b4a979')">
-                <img src="https://s3.aynaott.com/storage/9d9d7cbfba5a8ceea648bbd963ad1014" alt="PTV Sports">
-            </a>
-        </li>
-        <!-- 3 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/asports/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=73cb77c00db9f87d2f5803ded79a2858')">
-                <img src="https://s3.aynaott.com/storage/64de30d2df9b2a888cb73f17614a9a8b" alt="A sports">
-            </a>
-        </li>
-        <!-- 4 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/CricketGold/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=963350a7ac2d7605e235cc80871a32a4')">
-                <img src="https://s3.aynaott.com/storage/7d20b575edc4e4b5276faa8c246e72a4" alt="Cricket Gold">
-            </a>
-        </li>
-        <!-- 5 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/golfchannel/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=65599b8e536b8f411fe4ea1714abdd54')">
-                <img src="https://s3.aynaott.com/storage/edb73991516696dfd53efbd32d80ca58" alt="Golf Channel">
-            </a>
-        </li>
-        <!-- 6 -->
-        <li>
-            <a onclick="playChannel('https://linear-493.frequency.stream/dist/glewedtv/493/hls/master/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/030ec528e912afb9a2ec3b4c5167a928" alt="Bleav Football">
-            </a>
-        </li>
-        <!-- 7 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/foxsports2/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=ad82254447f88c61a2373694f2d24a56')">
-                <img src="https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5" alt="Fox Sports 2">
-            </a>
-        </li>
-        <!-- 8 -->
-        <li>
-            <a onclick="playChannel('http://fl1.moveonjoy.com/BEIN_SPORTS/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/04a56bc13c4c486ad4a4d82a1e00fd73" alt="Bein Sports">
-            </a>
-        </li>
-        <!-- 9 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/btSport2/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=88288da542048a54e29fca9c05fd4159')">
-                <img src="https://s3.aynaott.com/storage/0b6e5ad3267e5a5897abbe8f3be7b78a" alt="BT Sports 2">
-            </a>
-        </li>
-        <!-- 10 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/espn/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=7260d466a341e2fc65fd9e53ae860e74')">
-                <img src="https://s3.aynaott.com/storage/b46df1959322aa48d270a6b163234c76" alt="Espn">
-            </a>
-        </li>
-        <!-- 11 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/tsn2/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=4d0aff93eca87a509b76c63b94856186')">
-                <img src="https://s3.aynaott.com/storage/17642cb60c2af7fc36ca1e08cc54fdae" alt="TSN 2">
-            </a>
-        </li>
-        <!-- 12 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/talkSPORT/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=c8a66988431592e706dcac14d3bc490a')">
-                <img src="https://s3.aynaott.com/storage/5128cd32518d5a9ba7a37e21947fd8fd" alt="Talk Sport">
-            </a>
-        </li>
-        <!-- 13 -->
-        <li>
-            <a onclick="playChannel('https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/b54495ee3cdd53ddaa19d1f98120f488" alt="KTV Sport Plus">
-            </a>
-        </li>
-        <!-- 14 -->
-        <li>
-            <a onclick="playChannel('https://d4ddgdmj1cvnm.cloudfront.net/scheduler/scheduleMaster/409.m3u8')">
-                <img src="https://s3.aynaott.com/storage/748d28752dcf95740561f1ac39e15fc3" alt="Sports First TV">
-            </a>
-        </li>
-        <!-- 15 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/MarqueeSportsNetwork/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=74d8bc5dedaa3c6c074f42440a7e0584')">
-                <img src="https://s3.aynaott.com/storage/66bdaa21aba96de6d32a3515715f7502" alt="Marquee Sports Network">
-            </a>
-        </li>
-        <!-- 16 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/SportsGrid/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=d84a4394c1e28c305dfe31e0cc4591a2')">
-                <img src="https://s3.aynaott.com/storage/1aa37e387ed56a1260b285558eec7c46" alt="Sports Grid">
-            </a>
-        </li>
-        <!-- 17 -->
-        <li>
-            <a onclick="playChannel('https://streams2.sofast.tv/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/e0b81a5c-6ab5-48cd-aaa9-f82de4ab5bf9/manifest.m3u8')">
-                <img src="https://s3.aynaott.com/storage/e1749cf3040f11c63e722c941f213927" alt="Xtrem Sports">
-            </a>
-        </li>
-        <!-- 18 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/bloombergtv/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=d2471b7c778e391c967153a23fe9acd3')">
-                <img src="https://s3.aynaott.com/storage/253dcc8b5951160d6aa26bc5ac65ddb8" alt="Bloomberg TV">
-            </a>
-        </li>
-        <!-- 19 -->
-        <li>
-            <a onclick="playChannel('https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/f55bea3263be1af187fe1122e4f44142" alt="Bahrain Sports 1">
-            </a>
-        </li>
-        <!-- 20 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/willowhd/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=48f19204a07248943dad3868001b25b8')">
-                <img src="https://s3.aynaott.com/storage/94a778ec3219f7eb54bdf1ee07a95788" alt="Willow TV">
-            </a>
-        </li>
-        <!-- 21 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/nfl/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=7d591234c576bb6a8536ca242d0d963e')">
-                <img src="https://s3.aynaott.com/storage/79f1ee920d6931a767ae0030e1c7c12b" alt="NFL Network">
-            </a>
-        </li>
-        <!-- 22 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/btSport1/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=69733c555b9d673ed9023b52a3ec615b')">
-                <img src="https://s3.aynaott.com/storage/a3d1a4112bc7c6ee337871b58449542c" alt="TNT Sport 1">
-            </a>
-        </li>
-        <!-- 23 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/tsn1/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=8e9c26803bfee14327b4609902ac902a')">
-                <img src="https://s3.aynaott.com/storage/59fe7ff434fed04ecec29b4d737ebc95" alt="TSN 1">
-            </a>
-        </li>
-        <!-- 24 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/tsn3/index.m3u8?e=1779508653&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=805dd659bcd918e631d1c2f65aaa3026')">
-                <img src="https://s3.aynaott.com/storage/1cb10107a47db353e35ad78d3160eda7" alt="TSN 3">
-            </a>
-        </li>
-        <!-- 25 -->
-        <li>
-            <a onclick="playChannel('https://cdn-6.pishow.tv/live/13/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/188500190395c4de0e506d518925dcc4" alt="DD Sports">
-            </a>
-        </li>
-        <!-- 26 -->
-        <li>
-            <a onclick="playChannel('https://xumo-xumoent-vc-122-sjv70.fast.nbcuni.com/live/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/0a241a80bf51d2c3b3722531706ce086" alt="NBC Sports">
-            </a>
-        </li>
-        <!-- 27 -->
-        <li>
-            <a onclick="playChannel('https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-mainstreammediafreesportsintl-rakuten/CDN/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/1a580ee2636a0c4761e623bc131ba7a6" alt="WOF 1">
-            </a>
-        </li>
-        <!-- 28 -->
-        <li>
-            <a onclick="playChannel('https://linear-599.frequency.stream/dist/stirr/599/hls/master/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/06f5b193bfa4d31310ee934eb3c2222e" alt="speed sports 1">
-            </a>
-        </li>
-        <!-- 29 -->
-        <li>
-            <a onclick="playChannel('https://mts1.iptv-playoutcenter.de/mts/mts-web/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/39174e32d4f8d29a95c881637fe1ecdb" alt="More Then Sports TV">
-            </a>
-        </li>
-        <!-- 30 -->
-        <li>
-            <a onclick="playChannel('https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/33f87783637fc95fdb8837ba9344c9e9" alt="Oman Sports TV">
-            </a>
-        </li>
-        <!-- 31 -->
-        <li>
-            <a onclick="playChannel('https://streams2.sofast.tv/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/eea68b79-bfe2-451e-a227-d637a5b9548a/manifest.m3u8')">
-                <img src="https://s3.aynaott.com/storage/fede32688e783945fed0473f3b0daf23" alt="Sports Fishing TV">
-            </a>
-        </li>
-        <!-- 32 -->
-        <li>
-            <a onclick="playChannel('http://103.122.249.134:8000/play/a03d')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_SONY_SPORTS_TEN_5/images/LOGO_HD/image.png" alt="Sony Sports Ten 5  (1080p)">
-            </a>
-        </li>
-        <!-- 33 -->
-        <li>
-            <a onclick="playChannel('http://103.122.249.134:8000/play/a04u')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_STAR_SPORTS_3/images/LOGO_HD/image.png" alt="Star Sports 3 (576p)">
-            </a>
-        </li>
-        <!-- 34 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/tsportshd/index.m3u8')">
-                <img src="https://i.imgur.com/2JzlorD.png" alt="T Sports (720p)">
-            </a>
-        </li>
-        <!-- 35 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/channeli/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=14aeddfabc8774268e63c8789caeae7d')">
-                <img src="https://s3.aynaott.com/storage/8e998f20a9cc52cb8eb1f52a5bf38204" alt="Channel I">
-            </a>
-        </li>
-        <!-- 36 -->
-        <li>
-            <a onclick="playChannel('https://app.ncare.live/c3VydmVyX8RpbEU9Mi8xNy8yMDE0GIDU6RgzQ6NTAgdEoaeFzbF92YWxIZTO0U0ezN1IzMyfvcGVMZEJCTEFWeVN3PTOmdFsaWRtaW51aiPhnPTI/chsukoff.stream/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/342b1a51814ed9946fe36ac4999d82a2" alt="Channel S">
-            </a>
-        </li>
-        <!-- 37 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/ntvbd/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=915f035a7ac6bba889d5f3c1c1964d11')">
-                <img src="https://s3.aynaott.com/storage/1a619c9b917eb35898020cd323e415a7" alt="NTV">
-            </a>
-        </li>
-        <!-- 38 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/banglavision/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=c0d6e9e490ec9a0a4a78376fd0706af1')">
-                <img src="https://s3.aynaott.com/storage/788ab3e49b2aa6af247722762ed6e72a" alt="Bangla Vision">
-            </a>
-        </li>
-        <!-- 39 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/RtvHD/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=00064184cec924e0ccec040695fd4d81')">
-                <img src="https://s3.aynaott.com/storage/094587a26f2c5e4f2962104728ec8c5d" alt="RTV">
-            </a>
-        </li>
-        <!-- 40 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/atnbangla/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a19b74dbd9739aa0000a0935f87cc7e0')">
-                <img src="https://s3.aynaott.com/storage/eff41809fca04f7c1da5481e135d7913" alt="ATN Bangla">
-            </a>
-        </li>
-        <!-- 41 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/etv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=c1aa2f627aae91277e8ed05b728bb49c')">
-                <img src="https://s3.aynaott.com/storage/8a1af81802b0728c064c2adabcdc72c8" alt="ETV">
-            </a>
-        </li>
-        <!-- 42 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/maasrangatv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=0db702de0dc900183a865dbad604d57c')">
-                <img src="https://s3.aynaott.com/storage/1b5cb8c7901739cd7d201a38d2ab4737" alt="Maasranga TV">
-            </a>
-        </li>
-        <!-- 43 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/DeeptoTVHD/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6bf5b5b78488eef13ea21687fc2f4bd8')">
-                <img src="https://s3.aynaott.com/storage/76717b7a598a30815a1bdb16ecd3af6c" alt="Deepto TV">
-            </a>
-        </li>
-        <!-- 44 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/Ravc7gPCZpxk/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=fb92d0833b213057de9aa02bd86e4d91')">
-                <img src="https://s3.aynaott.com/storage/417a833f6d83021c99bfc3d4176610f4" alt="Gazi TV">
-            </a>
-        </li>
-        <!-- 45 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/deshtv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=fcd05894e575c897c887948134d29a92')">
-                <img src="https://s3.aynaott.com/storage/d10390e5434e8cb44172257abd714beb" alt="Desh TV">
-            </a>
-        </li>
-        <!-- 46 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/boishakhitv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=5f4a5d78048e90e18f1f13b7acd4cce0')">
-                <img src="https://s3.aynaott.com/storage/58658d4594ca1ff3c5031c9d8e3d9fc0" alt="Boishakhi TV">
-            </a>
-        </li>
-        <!-- 47 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/channel9/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=822c4e8a71a1884d02e91faa0a929b5b')">
-                <img src="https://s3.aynaott.com/storage/a959f06b4fc9e1421f867b6c1601fe43" alt="Channel 9">
-            </a>
-        </li>
-        <!-- 48 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/asiantv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=d8c2e7cc0340b272e2869ec8290e96ba')">
-                <img src="https://s3.aynaott.com/storage/5282cec3a2e9349b750540d658cf1b6c" alt="Asian TV">
-            </a>
-        </li>
-        <!-- 49 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/satv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=3ccbdf4ddd1a5e19fb6dbc5376a4c35d')">
-                <img src="https://s3.aynaott.com/storage/f710d2ff532cb7e7b75566232c5b72d3" alt="SA TV">
-            </a>
-        </li>
-        <!-- 50 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/durontotv-live/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=5e219faa96da4a6616452e6937acac37')">
-                <img src="https://s3.aynaott.com/storage/51f1530c076c027e431bf18a49613f0b" alt="Duronto TV">
-            </a>
-        </li>
-        <!-- 51 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/banglatv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=10e6524c4e9ebba57ba22f887c5a2279')">
-                <img src="https://s3.aynaott.com/storage/e42ecfa90e3d6b15bdb7fea5ef673864" alt="Bangla TV">
-            </a>
-        </li>
-        <!-- 52 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/btvhd/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=4e9a3bfdaf2e16f3be951ed8177f683e')">
-                <img src="https://s3.aynaott.com/storage/9b6f35f73a099b7a5885a970523c5f78" alt="BTV NATIONAL">
-            </a>
-        </li>
-        <!-- 53 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/anandatv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=1c0f229594ad8b008405b47a11e4761e')">
-                <img src="https://s3.aynaott.com/storage/897698f593fc07974fc46881a440733d" alt="Ananda TV">
-            </a>
-        </li>
-        <!-- 54 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/mytv/index.m3u8?e=1779508650&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=042da9d137ccf2f353a9453b14fd1e2a')">
-                <img src="https://s3.aynaott.com/storage/c5b2c623863fbe4033d59d52ff7371ac" alt="My TV">
-            </a>
-        </li>
-        <!-- 55 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/globaltvhd/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=caed93040817dee05e41b19d415bf78f')">
-                <img src="https://s3.aynaott.com/storage/ffd7ba9b76ad555933f94bcb7ff26b44" alt="Global TV">
-            </a>
-        </li>
-        <!-- 56 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/bijoytv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=bcfb7c540b24ae8a99e0c1b0e21459bb')">
-                <img src="https://s3.aynaott.com/storage/f23d6f82c1a16458fe0e4c6f11b8fd87" alt="Bijoy TV">
-            </a>
-        </li>
-        <!-- 57 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/nexustv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=60c87b004defff784ce04ab2b4c05e98')">
-                <img src="https://s3.aynaott.com/storage/90635c3edf6e3c8dd92210b7248f1fa0" alt="NEXUS TV">
-            </a>
-        </li>
-        <!-- 58 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/mohonatv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f27922c442863189e906db9594b688e2')">
-                <img src="https://s3.aynaott.com/storage/73082846fdc15d9f0e7268b104c55d92" alt="Mohona TV">
-            </a>
-        </li>
-        <!-- 59 -->
-        <li>
-            <a onclick="playChannel('https://vods2.aynascope.net/gseriesDrama/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/08773290bf83a917aebc07810f12ed49" alt="Drama 24">
-            </a>
-        </li>
-        <!-- 60 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/btv_world/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=db7936870eb15dfd122e4d6aabe1eaa0')">
-                <img src="https://s3.aynaott.com/storage/b30147b97d86754e4b97fc2989628391" alt="BTV World">
-            </a>
-        </li>
-        <!-- 61 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/btvctg/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=372c08be395f138fbf6759ec2498ae67')">
-                <img src="https://s3.aynaott.com/storage/00da8a07fb26b2fb79359ee535e4c7bc" alt="BTV CTG">
-            </a>
-        </li>
-        <!-- 62 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/PeaceTvBanglaHD/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b5befc584addc4bf01459f2059915c68')">
-                <img src="https://s3.aynaott.com/storage/e33b23f7dc3d39008d672952c33069d4" alt="Peace TV Bangla">
-            </a>
-        </li>
-        <!-- 63 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/timetv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=1a7c25d9ee308e4ddbdba86e02af9a6a')">
-                <img src="https://s3.aynaott.com/storage/111bfd01fb43770e925ca9cf16663f56" alt="TIME TV USA">
-            </a>
-        </li>
-        <!-- 64 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/AbcNews/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=3695b8a8d443d9b6ae6d667eb115fd53')">
-                <img src="https://s3.aynaott.com/storage/065af1ce1aa68d9d96c27050a8125413" alt="ABC News">
-            </a>
-        </li>
-        <!-- 65 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/BTVNews/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=1dcdbb54ae8878e79ab829bc1523cc7b')">
-                <img src="https://s3.aynaott.com/storage/35ae3e7750a053925a0a1732e219dc7a" alt="BTV News">
-            </a>
-        </li>
-        <!-- 66 -->
-        <li>
-            <a onclick="playChannel('https://cdn3.wowza.com/5/ZWQ1K2NYTmpFbGsr/BEK-WOWZA-1/smil:BEKPRIMEeast.smil/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/4eaf83274ee309489b535852b1780ad2" alt="BEK TV News">
-            </a>
-        </li>
-        <!-- 67 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/somoytv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=03d4267ebf879551272f36552a34d60e')">
-                <img src="https://s3.aynaott.com/storage/ece71c1163a377fbe2d93f9d28c34f60" alt="Somoy News TV">
-            </a>
-        </li>
-        <!-- 68 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/atnnews/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f6eac4c726b2b73260cedd898b5ef712')">
-                <img src="https://s3.aynaott.com/storage/8a3c5215dc0b943dc0a80333c0ab21ce" alt="ATN News">
-            </a>
-        </li>
-        <!-- 69 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/independenttv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=dd1c0687e7225b12e9d3069c0790f64c')">
-                <img src="https://s3.aynaott.com/storage/6653326503fcade746d87881d5c99697" alt="Independent TV">
-            </a>
-        </li>
-        <!-- 70 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/dbcnews/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b9b4ac3e6cc74912e8462cd884946bf5')">
-                <img src="https://s3.aynaott.com/storage/2c5a73ac3f9772a9cb2d18df1b152545" alt="DBC News">
-            </a>
-        </li>
-        <!-- 71 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/bbcnews/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=4bf95fad817e5d521ca6a7424779a5c4')">
-                <img src="https://s3.aynaott.com/storage/7a20437e5660324c20cf8251ccb7a697" alt="BBC News">
-            </a>
-        </li>
-        <!-- 72 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/ekhontv/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=58e41e5e4a3c830e995c82e97fd370da')">
-                <img src="https://s3.aynaott.com/storage/274c30c492e8795c8011d0129113f4bc" alt="Ekhon TV">
-            </a>
-        </li>
-        <!-- 73 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/news24/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a8565ff757ac1915908551bb45e7466e')">
-                <img src="https://s3.aynaott.com/storage/7c002f22c02096b0d1ba833ae9ea6d5b" alt="News 24 BD">
-            </a>
-        </li>
-        <!-- 74 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/ekattorbdtv/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=416b3e806affee3357e07b89ce2eb035')">
-                <img src="https://s3.aynaott.com/storage/d91767995b2f2a54852c92bbbc20daa7" alt="Ekattor TV">
-            </a>
-        </li>
-        <!-- 75 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/jamunatv/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=8ca1e53680165d20cde7df1428c6ad12')">
-                <img src="https://s3.aynaott.com/storage/aac6488b68844e5756ab46eb79659de8" alt="Jamuna TV">
-            </a>
-        </li>
-        <!-- 76 -->
-        <li>
-            <a onclick="playChannel('https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/0ce159bdea29fce7e3e85d12bc8a10c5" alt="DW News">
-            </a>
-        </li>
-        <!-- 77 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/ANB_News/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=cc73d6357243b82b8228ece953f21457')">
-                <img src="https://s3.aynaott.com/storage/4ec06dcab54cbbf5b204f797555e6b31" alt="ANB News">
-            </a>
-        </li>
-        <!-- 78 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/News1India/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6ad6205d6cd20e563be64ea9909aba1e')">
-                <img src="https://s3.aynaott.com/storage/c643b3f7d7f79ad3913b5d2037f13a88" alt="News 1 India">
-            </a>
-        </li>
-        <!-- 79 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/SadhnaPrimeNews/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=3871e09ea91e8efcac07e3e1431b5674')">
-                <img src="https://s3.aynaott.com/storage/80e4113d034ad20bcbea341dcb4ae27e" alt="Sadhna Prime News">
-            </a>
-        </li>
-        <!-- 80 -->
-        <li>
-            <a onclick="playChannel('https://dyjmyiv3bp2ez.cloudfront.net/pub-iotv9banaen8yq/liveabr/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/7b93f6be496c9fd25769b09970180c4c" alt="TV9 Bangla">
-            </a>
-        </li>
-        <!-- 81 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/skynews/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=9a952463ac741f511a7ec95ee40ef3af')">
-                <img src="https://s3.aynaott.com/storage/69d8281f965475f3293a3e30de8c0ccb" alt="Sky News">
-            </a>
-        </li>
-        <!-- 82 -->
-        <li>
-            <a onclick="playChannel('https://d3qs3d2rkhfqrt.cloudfront.net/out/v1/6cd2f649739a45ca9de1daf81cc7d0f2/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/1001f1d96d63da3ced733a843613b6e0" alt="News Nation">
-            </a>
-        </li>
-        <!-- 83 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/kolkatatv/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f017297d230c7c1a80334f2e2a77a042')">
-                <img src="https://s3.aynaott.com/storage/c355110e9cbebd89649a95f0f0fd77da" alt="kolkata TV">
-            </a>
-        </li>
-        <!-- 84 -->
-        <li>
-            <a onclick="playChannel('https://streams2.sofast.tv/sofastplayout/WiseM3U8_1/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/495e1816602db61aa4c2a348a257bd0a" alt="Goal TV">
-            </a>
-        </li>
-        <!-- 85 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/amc/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a53427c8d5eefadb00d937b36f74d875')">
-                <img src="https://s3.aynaott.com/storage/5522b7ef736d7f4e7f80ac6325dce821" alt="AMC TV">
-            </a>
-        </li>
-        <!-- 86 -->
-        <li>
-            <a onclick="playChannel('https://dfhsahpa45kk2.cloudfront.net/scheduler/scheduleMaster/476.m3u8')">
-                <img src="https://s3.aynaott.com/storage/597c839e577e81813e44812cedc50892" alt="Wild TV">
-            </a>
-        </li>
-        <!-- 87 -->
-        <li>
-            <a onclick="playChannel('https://aenetworks-worldwartv-rakuten.amagi.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/1e7dc35fdb26ce3aca17b41fae1aa56f" alt="World War TV">
-            </a>
-        </li>
-        <!-- 88 -->
-        <li>
-            <a onclick="playChannel('https://reflect-vod-cmac.cablecast.tv/live-11/live/stream-2/live.m3u8')">
-                <img src="https://s3.aynaott.com/storage/14a329b450239b9a4beaa4953c33367b" alt="CMAC TV">
-            </a>
-        </li>
-        <!-- 89 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/islam/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=670fe4540cc1d439d54ac8f2381ca952')">
-                <img src="https://s3.aynaott.com/storage/5e74c3498e10b3cd2dadfe676681d387" alt="Islam TV">
-            </a>
-        </li>
-        <!-- 90 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/RDSSocialTV/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=8e61208228c00d7a635dbe3bb26e60a6')">
-                <img src="https://s3.aynaott.com/storage/f1fbcbc6cd325f5324eabb3bc733584e" alt="RDS Social TV">
-            </a>
-        </li>
-        <!-- 91 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/cooking/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=20ec0e26f8331b6caf4f6e408f630ddb')">
-                <img src="https://s3.aynaott.com/storage/bf9792dc04cace6a25407b6304a35046" alt="COOKING TV">
-            </a>
-        </li>
-        <!-- 92 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/epix/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=efbac5c00f609b7ae31b80afd3d1123e')">
-                <img src="https://s3.aynaott.com/storage/c0b0c986890a8c88c3566d93e18cada6" alt="EPIX TV">
-            </a>
-        </li>
-        <!-- 93 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/fx/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b55eede80a06305f6b8b71fffe4e1657')">
-                <img src="https://s3.aynaott.com/storage/f403cc315ca6269c5fcbf1875c95d329" alt="FX TV">
-            </a>
-        </li>
-        <!-- 94 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/hgtv/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=2a7d887a97cfad8dd59ec1f937e69baa')">
-                <img src="https://s3.aynaott.com/storage/be15ed692e22ad4b7dcb9d7251ce32a6" alt="HGTV">
-            </a>
-        </li>
-        <!-- 95 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/laff/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6b17a35631aa2d0b0430ffa33c6ef940')">
-                <img src="https://s3.aynaott.com/storage/ac4e2fb2e4eccd7417e5cc5b5a733369" alt="LAFF TV">
-            </a>
-        </li>
-        <!-- 96 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/natgeo/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=15f966a8e7aa926f345b1971860d0ef9')">
-                <img src="https://s3.aynaott.com/storage/2dce8297266bbc9c235c27119f914e1b" alt="Nat Geo TV">
-            </a>
-        </li>
-        <!-- 97 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/syfy/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=56a5e90eda1a959ab3edddcb900c26da')">
-                <img src="https://s3.aynaott.com/storage/addd5f3c52326489e02df9aa14bb4ea5" alt="SYFY TV">
-            </a>
-        </li>
-        <!-- 98 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/ibtvusa/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=7104687df1f65c2619c21a772500ed37')">
-                <img src="https://s3.aynaott.com/storage/1678abdbf203bb77af4bbf2905a3de59" alt="IBTV USA">
-            </a>
-        </li>
-        <!-- 99 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/cnbc/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=2bf970f6a1005eecaeccc2463fe33a98')">
-                <img src="https://s3.aynaott.com/storage/16a213d06e7362d97cb6085e70c9b5a2" alt="CNBC TV">
-            </a>
-        </li>
-        <!-- 100 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/cbs/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b809e3f1454b7035c0bec3a9dccd2358')">
-                <img src="https://s3.aynaott.com/storage/41536a676b99c1996efbccd8f65df42b" alt="CBS TV">
-            </a>
-        </li>
-        <!-- 101 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/mtv/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=8e3f48dcfe9f4c9ebc27de1bfec64be0')">
-                <img src="https://s3.aynaott.com/storage/c0bfcdb40393eb5824907adaaa63a653" alt="MTV">
-            </a>
-        </li>
-        <!-- 102 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/usa/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=e96b1babf24c1316e273d1b893a5bd35')">
-                <img src="https://s3.aynaott.com/storage/376b8483457b06dbc5b7b7b327a21ac6" alt="\t USA TV">
-            </a>
-        </li>
-        <!-- 103 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/msnbc/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a8db0e9a90eeb5992db1a6e20fe1970d')">
-                <img src="https://s3.aynaott.com/storage/9a9ca715640d3dc227a0a74750ab17f2" alt="MSNBC News">
-            </a>
-        </li>
-        <!-- 104 -->
-        <li>
-            <a onclick="playChannel('https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg01438-ewscrippscompan-courttv-tablo/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/7deacf82c7f75cf7aaee5e0935c3d2c8" alt="Court TV">
-            </a>
-        </li>
-        <!-- 105 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/TaazaTV/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=0b486da420f27fb293aac5f73e34e7b9')">
-                <img src="https://s3.aynaott.com/storage/01c9cb3e1a4c90da6685700da863f0ce" alt="Taaza TV">
-            </a>
-        </li>
-        <!-- 106 -->
-        <li>
-            <a onclick="playChannel('https://cdn-3.pishow.tv/live/230/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/c63628e7301ba1eded68c0f75ab8d903" alt="Shemaroo TV">
-            </a>
-        </li>
-        <!-- 107 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/ManoranjanTV/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=1e877fadf89661643fab960547562252')">
-                <img src="https://s3.aynaott.com/storage/1a62a70103bac9999411a72b8a8b7ccc" alt="Manoranjan TV">
-            </a>
-        </li>
-        <!-- 108 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/RepublicTVBharat/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=41def6f7ada9f48530cda287ab0ac28c')">
-                <img src="https://s3.aynaott.com/storage/947715e0a22f16ac21805073ce6eb0b6" alt="Republic TV Bharat">
-            </a>
-        </li>
-        <!-- 109 -->
-        <li>
-            <a onclick="playChannel('https://server.thelegitpro.in/rongeentv/rongeentv/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/296b530024a470f52313692636810e04" alt="Rongeen TV">
-            </a>
-        </li>
-        <!-- 110 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/GreenTvHD/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6e5452b037bdeab54c8eba4154363fe6')">
-                <img src="https://s3.aynaott.com/storage/499219599639007120dc540bdc6e7d9d" alt="Green TV">
-            </a>
-        </li>
-        <!-- 111 -->
-        <li>
-            <a onclick="playChannel('https://d3qs3d2rkhfqrt.cloudfront.net/out/v1/7ff57cc9046b4c188b51a0d506f36e7f/index_3.m3u8')">
-                <img src="https://s3.aynaott.com/storage/e5117c508d18adf0a3f2475eb1fd5a9d" alt="DD Bangla">
-            </a>
-        </li>
-        <!-- 112 -->
-        <li>
-            <a onclick="playChannel('https://live-bangla.akamaized.net/liveabr/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/2b00567c538d392c8050124f0064c4a1" alt="Enter 10 Bangla">
-            </a>
-        </li>
-        <!-- 113 -->
-        <li>
-            <a onclick="playChannel('https://newidco-kidspangtv-1-us.roku.wurl.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/bc2a021f901e4d1de4948f314536c1bf" alt="Kids Pang TV">
-            </a>
-        </li>
-        <!-- 114 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/ytv/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=eb23c4fef4db02d0893c9641bc5bb1a6')">
-                <img src="https://s3.aynaott.com/storage/d79d89851faee0823a1f2bed1a96e84d" alt="YTV">
-            </a>
-        </li>
-        <!-- 115 -->
-        <li>
-            <a onclick="playChannel('https://cdn.mycloudstream.io/hls/live/broadcast/nro19k2h/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/c6fde511a99e5134dbf12b77da386cb6" alt="TVCARiB Kids &amp; Teens">
-            </a>
-        </li>
-        <!-- 116 -->
-        <li>
-            <a onclick="playChannel('https://protokolldns.xyz/rtvislamweb554/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/f00eda9194eb13e8ef1d1387889173bf" alt="RTV Islam">
-            </a>
-        </li>
-        <!-- 117 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/PeaceTVUrduHD/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=40b83bf91abee9af483f23db026e1bd8')">
-                <img src="https://s3.aynaott.com/storage/5442b2655aca6398b26ba539f396565a" alt="Peace TV Urdu">
-            </a>
-        </li>
-        <!-- 118 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/deen/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b4761d14789ecb68e7e96c698a527f5e')">
-                <img src="https://s3.aynaott.com/storage/66ac3ae1e56001353b69bb5f63ebcc6e" alt="Deen TV">
-            </a>
-        </li>
-        <!-- 119 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/MadaniTV/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b3edf78b0ed62e284d9910e51b377b7f')">
-                <img src="https://s3.aynaott.com/storage/813fca9bc7df9a4810efe2eb87c57039" alt="MADANI TV">
-            </a>
-        </li>
-        <!-- 120 -->
-        <li>
-            <a onclick="playChannel('https://distro001-gb-hls1-prd.delivery.skycdp.com/easel_cdn/ngrp:weather_loop.stream_all/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/78b7ab973209ec06346cf8acfd8544cd" alt="Sky News Weather">
-            </a>
-        </li>
-        <!-- 121 -->
-        <li>
-            <a onclick="playChannel('https://5dd3981940faa.streamlock.net:443/thikanatv/thikanatv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/6d1aaa03b84a69992940873fc11af8fc" alt="Thikana">
-            </a>
-        </li>
-        <!-- 122 -->
-        <li>
-            <a onclick="playChannel('https://live.legitpro.co.in/cnnnews/index.m3u8')">
-                <img src="https://ltsk-cdn.s3.eu-west-1.amazonaws.com/jumpstart/Temp_Live/cdn/HLS/Channel/transparentImages/Calcutta%20News.png" alt="AKD Calcutta News (1080p)">
-            </a>
-        </li>
-        <!-- 123 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-AnandaTV/index.m3u8')">
-                <img src="https://i.imgur.com/jkbo7Qe.png" alt="Ananda TV (1080p)">
-            </a>
-        </li>
-        <!-- 124 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-ATNNews/index.m3u8')">
-                <img src="https://i.imgur.com/4qZQKjo.png" alt="ATN News (1080p)">
-            </a>
-        </li>
-        <!-- 125 -->
-        <li>
-            <a onclick="playChannel('https://boishakhi.sonarbanglatv.com/boishakhi/boishakhitv/index.m3u8')">
-                <img src="https://i.imgur.com/gxL05Y4.png" alt="Boishakhi TV">
-            </a>
-        </li>
-        <!-- 126 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-BTVChattagram/index.m3u8')">
-                <img src="https://i.imgur.com/hvpyuek.png" alt="BTV Chattogram (1080p)">
-            </a>
-        </li>
-        <!-- 127 -->
-        <li>
-            <a onclick="playChannel('https://www.btvlive.gov.bd/streams/ef8b8bbc-98b7-4ba7-a49d-a0adaf259d35/ES/355ba051-9a60-48aa-adcf-5a6c64da8c5c/355ba051-9a60-48aa-adcf-5a6c64da8c5c_3_playlist.m3u8')">
-                <img src="https://i.imgur.com/5OE2FDt.png" alt="BTV National (1080p)">
-            </a>
-        </li>
-        <!-- 128 -->
-        <li>
-            <a onclick="playChannel('https://www.btvlive.gov.bd/streams/ef8b8bbc-98b7-4ba7-a49d-a0adaf259d35/ES/d96eb7f4-83c2-4472-9597-3568390a8ebf/d96eb7f4-83c2-4472-9597-3568390a8ebf_3_playlist.m3u8')">
-                <img src="https://i.imgur.com/sSnrg7o.png" alt="BTV World (1080p)">
-            </a>
-        </li>
-        <!-- 129 -->
-        <li>
-            <a onclick="playChannel('https://live.legitpro.co.in/ctvnakdplus/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s142754_ld_h15_aa.png?lock=720x540" alt="CTVN AKD Plus (1080p)">
-            </a>
-        </li>
-        <!-- 130 -->
-        <li>
-            <a onclick="playChannel('http://tvn3.chowdhury-shaheb.com/dbc/index.m3u8')">
-                <img src="https://i.imgur.com/Qbt6q4z.png" alt="DBC News (480p)">
-            </a>
-        </li>
-        <!-- 131 -->
-        <li>
-            <a onclick="playChannel('https://ap02.iqplay.tv:8082/iqb8002/d33ntv/playlist.m3u8')">
-                <img src="https://i.imgur.com/Zp62Nbd.png" alt="Deen TV (576p) [Not 24/7]">
-            </a>
-        </li>
-        <!-- 132 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-DeshTV/index.m3u8')">
-                <img src="https://i.imgur.com/ItrZok1.png" alt="Desh TV (1080p)">
-            </a>
-        </li>
-        <!-- 133 -->
-        <li>
-            <a onclick="playChannel('https://deshitv.deshitv24.net/live/myStream/playlist.m3u8')">
-                <img src="https://i.imgur.com/PzqzgMm.png" alt="Deshi TV (720p)">
-            </a>
-        </li>
-        <!-- 134 -->
-        <li>
-            <a onclick="playChannel('https://tplay.live/out/bangladesh/ekhontv.index.m3u8')">
-                <img src="https://i.imgur.com/tRrDh6z.png" alt="Ekhon TV (1080p)">
-            </a>
-        </li>
-        <!-- 135 -->
-        <li>
-            <a onclick="playChannel('https://ekusheyserver.com/etvlivesn.m3u8')">
-                <img src="https://i.imgur.com/lRpkGHj.png" alt="Ekushey TV (480p)">
-            </a>
-        </li>
-        <!-- 136 -->
-        <li>
-            <a onclick="playChannel('http://tvn1.chowdhury-shaheb.com/gazitv/index.m3u8')">
-                <img src="https://i.imgur.com/2Lzhiq6.png" alt="Gazi TV (1080p)">
-            </a>
-        </li>
-        <!-- 137 -->
-        <li>
-            <a onclick="playChannel('https://app.ncare.live/c3VydmVyX8RpbEU9Mi8xNy8yMDE0GIDU6RgzQ6NTAgdEoaeFzbF92YWxIZTO0U0ezN1IzMyfvcGVMZEJCTEFWeVN3PTOmdFsaWRtaW51aiPhnPTI2/greentv.stream/live-orgin/greentv.stream/playlist.m3u8')">
-                <img src="https://www.jagobd.com/wp-content/uploads/2022/12/green-tv.jpg" alt="Green TV (1080p)">
-            </a>
-        </li>
-        <!-- 138 -->
-        <li>
-            <a onclick="playChannel('https://highmedia.livebox.co.in/HIGHNEWShls/LIVE.m3u8')">
-                <img src="https://pbs.twimg.com/profile_images/1104268476858937351/USUT4ykS_400x400.png" alt="High News (480p)">
-            </a>
-        </li>
-        <!-- 139 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-IndependentTV/index.m3u8')">
-                <img src="https://i.imgur.com/POXFhGN.png" alt="Independent TV (1080p)">
-            </a>
-        </li>
-        <!-- 140 -->
-        <li>
-            <a onclick="playChannel('https://ap02.iqplay.tv:8082/iqb8002/i09/playlist.m3u8')">
-                <img src="https://i.imgur.com/E8VwnK7.png" alt="iON TV (576p)">
-            </a>
-        </li>
-        <!-- 141 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-JamunaTelevision/index.m3u8')">
-                <img src="https://www.jamuna.tv/wp-content/themes/jtv-news/img/logo.png" alt="Jamuna TV (1080p)">
-            </a>
-        </li>
-        <!-- 142 -->
-        <li>
-            <a onclick="playChannel('https://cdn.ottlive.co.in/kolkatatv/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s143271_ld_h15_aa.png?lock=720x540" alt="Kolkata TV (1080p)">
-            </a>
-        </li>
-        <!-- 143 -->
-        <li>
-            <a onclick="playChannel('https://server.livelegitpro.in:9899/tribetv/tribetv/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/channel/2f8e3b371c660faa2f43a7f0942948a4.png" alt="KTV Bangla (720p)">
-            </a>
-        </li>
-        <!-- 144 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-MohonaTV/index.m3u8')">
-                <img src="https://i.imgur.com/E6doEWH.png" alt="Mohona TV (1080p)">
-            </a>
-        </li>
-        <!-- 145 -->
-        <li>
-            <a onclick="playChannel('https://n18syndication.akamaized.net/bpk-tv/News18_Bangla_NW18_MOB/output01/master.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NEWS18_BANGLA/images/LOGO_HD/image.png" alt="News18 Bangla (1080p)">
-            </a>
-        </li>
-        <!-- 146 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-News24HD/index.m3u8')">
-                <img src="https://i.imgur.com/fkTHh75.png" alt="News 24 (1080p)">
-            </a>
-        </li>
-        <!-- 147 -->
-        <li>
-            <a onclick="playChannel('https://cdn-2.pishow.tv/live/1494/master.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NEWS_TIME_BANGLA/images/LOGO_HD/image.png" alt="NewsTime Bangla (576p)">
-            </a>
-        </li>
-        <!-- 148 -->
-        <li>
-            <a onclick="playChannel('https://nktv.smartstream.video/smartstream-us/nkbangla/nkbangla/playlist.m3u8')">
-                <img src="https://www.nktvbangla.com/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-12-at-2.59.18-PM.jpg" alt="NK TV Bangla (1080p)">
-            </a>
-        </li>
-        <!-- 149 -->
-        <li>
-            <a onclick="playChannel('https://mumt03.tangotv.in/ONTV/index.m3u8')">
-                <img src="https://bdixiptvbd.com/logo.png" alt="On TV (576p)">
-            </a>
-        </li>
-        <!-- 150 -->
-        <li>
-            <a onclick="playChannel('https://5dd3981940faa.streamlock.net/onkarentertainment/onkarentertainment/playlist.m3u8')">
-                <img src="https://i.imgur.com/wu7aQRg.png" alt="Onkar Only Truth TV (576p)">
-            </a>
-        </li>
-        <!-- 151 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/1499/master.m3u8')">
-                <img src="https://i.imgur.com/wjSaHj5.png" alt="Orange Bangla TV (720p)">
-            </a>
-        </li>
-        <!-- 152 -->
-        <li>
-            <a onclick="playChannel('https://dzkyvlfyge.erbvr.com/PeaceTvBangla/index.m3u8')">
-                <img src="https://i.imgur.com/1ztVXUi.png" alt="Peace TV Bangla (1080p)">
-            </a>
-        </li>
-        <!-- 153 -->
-        <li>
-            <a onclick="playChannel('http://158.69.24.53:8080/probashi_tv/index.m3u8')">
-                <img src="https://i.imgur.com/7oTsfQ4.png" alt="Probashi TV News (1080p)">
-            </a>
-        </li>
-        <!-- 154 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-RTV/index.m3u8')">
-                <img src="https://i.imgur.com/yu8ugqt.png" alt="RTV (1080p)">
-            </a>
-        </li>
-        <!-- 155 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-SangsadTV/index.m3u8')">
-                <img src="https://i.imgur.com/jkouxLg.png" alt="Sangsad TV (1080p)">
-            </a>
-        </li>
-        <!-- 156 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-somoy/index.m3u8')">
-                <img src="https://i.imgur.com/i54AQic.png" alt="Somoy News TV (1080p)">
-            </a>
-        </li>
-        <!-- 157 -->
-        <li>
-            <a onclick="playChannel('https://vokta.raytahost.com/live/voktatv/index.m3u8')">
-                <img src="https://i.imgur.com/szAGBCU.png" alt="Vokta TV (720p)">
-            </a>
-        </li>
-        <!-- 158 -->
-        <li>
-            <a onclick="playChannel('https://server.zillarbarta.com/zillarbarta/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/zillarbarta.png" alt="ZillarBarta News">
-            </a>
-        </li>
-        <!-- 159 -->
-        <li>
-            <a onclick="playChannel('https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/5d707a103f48d8f9f1634f1b70e2ecdf" alt="AlJazeera">
-            </a>
-        </li>
-        <!-- 160 -->
-        <li>
-            <a onclick="playChannel('https://owrcovcrpy.gpcdn.net/bpk-tv/1710/output/1701.m3u8')">
-                <img src="https://s3.aynaott.com/storage/b3564688d9964a0da7cee6174fda39ef" alt="Star News">
-            </a>
-        </li>
-        <!-- 161 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/zee24/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=7f9eba624d9f1f3f814e489001de6938')">
-                <img src="https://s3.aynaott.com/storage/fea79ac5193dd9fb80aa1996f2adc1e2" alt="Zee 24 Ghanta">
-            </a>
-        </li>
-        <!-- 162 -->
-        <li>
-            <a onclick="playChannel('http://103.229.254.25:7001/play/a0dt/index.m3u8')">
-                <img src="https://i.imgur.com/25eWjX2.png" alt="Jalsha Movies  (1080p)">
-            </a>
-        </li>
-        <!-- 163 -->
-        <li>
-            <a onclick="playChannel('http://45.148.145.57/IN_Zee24Ghanta/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/GNLZZGG0022KGXP.png?lock=720x540" alt="Zee 24 Ghanta (576p)">
-            </a>
-        </li>
-        <!-- 164 -->
-        <li>
-            <a onclick="playChannel('http://103.122.249.134:8000/play/a030')">
-                <img src="https://dtil.tmsimg.com/assets/GNLZZGG00287G7K.png?lock=720x540" alt="Zee Bangla Sonar (576p)">
-            </a>
-        </li>
-        <!-- 165 -->
-        <li>
-            <a onclick="playChannel('https://cdn-2.pishow.tv/live/226/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/20c3a2638df99ece9eb12aabfc03a8c3" alt="Music India">
-            </a>
-        </li>
-        <!-- 166 -->
-        <li>
-            <a onclick="playChannel('https://app.ncare.live/c3VydmVyX8RpbEU9Mi8xNy8yMDE0GIDU6RgzQ6NTAgdEoaeFzbF92YWxIZTO0U0ezN1IzMyfvcGVMZEJCTEFWeVN3PTOmdFsaWRtaW51aiPhnPTI/atnmusic.stream/playlist.m3u8')">
-                <img src="https://www.jagobd.com/wp-content/uploads/2015/12/atnmusic.jpg?x50681" alt="ATN Music (360p)">
-            </a>
-        </li>
-        <!-- 167 -->
-        <li>
-            <a onclick="playChannel('https://cdn-1.pishow.tv/live/1456/master.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_DHOOM_MUSIC/images/LOGO_HD/image.png" alt="Dhoom Music (720p)">
-            </a>
-        </li>
-        <!-- 168 -->
-        <li>
-            <a onclick="playChannel('https://server.zillarbarta.com/zbmusic/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/zbmusic.png" alt="ZB Music (720p)">
-            </a>
-        </li>
-        <!-- 169 -->
-        <li>
-            <a onclick="playChannel('https://raw.githubusercontent.com/ibstvofficial/IBS-TV-special-movies.m3u/refs/heads/main/promo%20dual.mp4')">
-                <img src="https://bdixiptvbd.com/logo.png" alt="--- [ OTHERS PROMOTION ] ---">
-            </a>
-        </li>
-        <!-- 170 -->
-        <li>
-            <a onclick="playChannel('http://dummy-link.local')">
-                <img src="https://static.vecteezy.com/system/resources/previews/000/554/655/original/cricket-logo-vector.jpg" alt="No Live Match Available Right Now">
-            </a>
-        </li>
-        <!-- 171 -->
-        <li>
-            <a onclick="playChannel('https://content.uplynk.com/channel/ext/4413701bf5a1488db55b767f8ae9d4fa/kgo_24x7_news.m3u8')">
-                <img src="https://s3.aynaott.com/storage/b28173a251bda1357f9884ca7eef7b89" alt="ABC 7 Bay">
-            </a>
-        </li>
-        <!-- 172 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/channel24/index.m3u8?e=1779508651&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=636a067d05235eb1b505d50d4e45f0b3')">
-                <img src="https://s3.aynaott.com/storage/129b0d0a02566999a0c164cd7d506e55" alt="Channel 24">
-            </a>
-        </li>
-        <!-- 173 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/cnn/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=c6a6907c91db371103cc21b67d9b5c48')">
-                <img src="https://s3.aynaott.com/storage/e0b6da4715f468eb39591911a0597546" alt="CNN">
-            </a>
-        </li>
-        <!-- 174 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/nhkworld/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=46794b1a00a7ab26c9a05b11c7e55d95')">
-                <img src="https://s3.aynaott.com/storage/d969a37a7e1bbd49449ae092d34f0549" alt="NHK World">
-            </a>
-        </li>
-        <!-- 175 -->
-        <li>
-            <a onclick="playChannel('https://d7x8z4yuq42qn.cloudfront.net/index_7.m3u8')">
-                <img src="https://s3.aynaott.com/storage/671cfb22f8d0362ae01403b6e748f2e2" alt="Wion">
-            </a>
-        </li>
-        <!-- 176 -->
-        <li>
-            <a onclick="playChannel('https://tv-trtworld.medya.trt.com.tr/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/f63d4aad95532175f7f44be439f74111" alt="TRT World">
-            </a>
-        </li>
-        <!-- 177 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/HindiKhabar/index.m3u8?e=1779508652&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=58f7b7f18ad29b0a5485a60295d4c7e8')">
-                <img src="https://s3.aynaott.com/storage/d3943796d7fe5962ca5385b656682b1a" alt="Hindi Khabar">
-            </a>
-        </li>
-        <!-- 178 -->
-        <li>
-            <a onclick="playChannel('https://feeds.intoday.in/hltapps/api/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/49b496bca6d7c67d53431e9238f83397" alt="India Today">
-            </a>
-        </li>
-        <!-- 179 -->
-        <li>
-            <a onclick="playChannel('https://a-cdn.klowdtv.com/live1/oan_720p/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/73820738ff3902737f987eb34612b26d" alt="OAN">
-            </a>
-        </li>
-        <!-- 180 -->
-        <li>
-            <a onclick="playChannel('https://live.presstv.ir/hls/presstv_5_482/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/201491b7327fffb27d78f800dd9f42d2" alt="Iran Press">
-            </a>
-        </li>
-        <!-- 181 -->
-        <li>
-            <a onclick="playChannel('https://thelegitpro.in/pntv/rplusnews24x7/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/9531f970bb7abf30ac2a48f40838c3a1" alt="R Plus">
-            </a>
-        </li>
-        <!-- 182 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/RplusGold/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=2dfa8cd85313661730c852a655530097')">
-                <img src="https://s3.aynaott.com/storage/5a7f80e9417b452051a0e75db768e796" alt="R Plus Gold">
-            </a>
-        </li>
-        <!-- 183 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/1143/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/80424ce0682e14e7d51e28de33d5f380" alt="Sangeet Bangla">
-            </a>
-        </li>
-        <!-- 184 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/R_Bangla/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=580a77c6882cc6fa4f2cd343998e8878')">
-                <img src="https://s3.aynaott.com/storage/18cb20e8e53eb27249c62d3aedf51241" alt="Republic Bangla">
-            </a>
-        </li>
-        <!-- 185 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/pix11/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f259e970b96509c41b5fc9c132b5291a')">
-                <img src="https://s3.aynaott.com/storage/294b72dc2ca7b74ab3312059728cab22" alt="pix 11">
-            </a>
-        </li>
-        <!-- 186 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/axs/index.m3u8?e=1779508654&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a94b330d393b8c3b6d73f6653cbecfe2')">
-                <img src="https://s3.aynaott.com/storage/56d2c21362152b678998094f1c670dd5" alt="AXS">
-            </a>
-        </li>
-        <!-- 187 -->
-        <li>
-            <a onclick="playChannel('https://cdntv.tbs.seoul.kr/tbs/tbs_tv_web.smil/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/45a768728c7514ba59d1a0ccf806e222" alt="TBS">
-            </a>
-        </li>
-        <!-- 188 -->
-        <li>
-            <a onclick="playChannel('https://streams2.sofast.tv/sofastplayout/33c31ac4-51fa-46ae-afd0-0d1fe5e60a80_0_HLS/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/6ccc7357c3d8d35770732126dd819596" alt="4k Travel">
-            </a>
-        </li>
-        <!-- 189 -->
-        <li>
-            <a onclick="playChannel('https://amg00861-amg00861c10-rakuten-uk-3152.playouts.now.amagi.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/b35e9c1bcde3e6876892a22f91a9c4b5" alt="InTravel">
-            </a>
-        </li>
-        <!-- 190 -->
-        <li>
-            <a onclick="playChannel('https://ptravelhls.persiana.live/hls/stream.m3u8')">
-                <img src="https://s3.aynaott.com/storage/be9b48d87dcd7711cac19c17d8e01b27" alt="Persiana Travel">
-            </a>
-        </li>
-        <!-- 191 -->
-        <li>
-            <a onclick="playChannel('https://27c980761ff9437d929e64647afe183a.mediatailor.us-east-1.amazonaws.com/v1/master/44f73ba4d03e9607dcd9bebdcb8494d86964f1d8/RakutenTV-eu_TravelXP/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/a676d2f5ddf6e5f978b3d51876dceecf" alt="Travel XP">
-            </a>
-        </li>
-        <!-- 192 -->
-        <li>
-            <a onclick="playChannel('https://moviesphereuk-samsunguk.amagi.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/4d343b446b1e7164bb7239bbe822a570" alt="Movie Sphere">
-            </a>
-        </li>
-        <!-- 193 -->
-        <li>
-            <a onclick="playChannel('https://0145451975a64b35866170fd2e8fa486.mediatailor.eu-west-1.amazonaws.com/v1/master/0547f18649bd788bec7b67b746e47670f558b6b2/production-LiveChannel-5987/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/22af43810a37af9a151f1e0a23adde63" alt="Rakuten Movies">
-            </a>
-        </li>
-        <!-- 194 -->
-        <li>
-            <a onclick="playChannel('https://streams2.sofast.tv/sofastplayout/32eb332e-f644-46e5-ad91-e55ad80d14f7_0_HLS/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/cb1ab052f5b733bbf600a7a8e3a1164b" alt="Cowboy Movie Channel">
-            </a>
-        </li>
-        <!-- 195 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/hbo/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=e15cb36e1a3afb8310f8ff8545e17ac3')">
-                <img src="https://s3.aynaott.com/storage/4a1291716680b5c095d33e106337bb04" alt="HBO">
-            </a>
-        </li>
-        <!-- 196 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/cgtnDocumentary/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=233a3fb1c3b3b13084155fc7fd67721b')">
-                <img src="https://s3.aynaott.com/storage/319020b844885cbabcd34e3f2f84d283" alt="CGTN Docu">
-            </a>
-        </li>
-        <!-- 197 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/foxbusiness/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=98bf6a6953115813306f023da6b2c13b')">
-                <img src="https://s3.aynaott.com/storage/20e4602dd584784607e5eff3963cdde6" alt="Fox business">
-            </a>
-        </li>
-        <!-- 198 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/fox5/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a530289196bd2315e1e34bc93b1b5adc')">
-                <img src="https://s3.aynaott.com/storage/4f6486854be670f7458ab60d0402ee42" alt="Fox 5">
-            </a>
-        </li>
-        <!-- 199 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/discoveryfamily/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=7280b8fdbfd3985f463f60de35c89ce5')">
-                <img src="https://s3.aynaott.com/storage/3f7983c0bc7cacd206dd195a2eff6b10" alt="Discovery Family">
-            </a>
-        </li>
-        <!-- 200 -->
-        <li>
-            <a onclick="playChannel('https://tiger-hub.vercel.app@vodzong.mjunoon.tv:8087/streamtest/Animal-Planet-158-3/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/18d95033c5d53fc3b159141a842fdeac" alt="Animal Planet">
-            </a>
-        </li>
-        <!-- 201 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/bravo/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=73d70bd017d0c65fb24ef5ec5698135c')">
-                <img src="https://s3.aynaott.com/storage/7604a2c87620363fce86b73731b8035d" alt="BRAVO">
-            </a>
-        </li>
-        <!-- 202 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/comedycentral/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=918fdccd895a057a2117d5d76f804268')">
-                <img src="https://s3.aynaott.com/storage/211d55de947bdf03f5c18b7e30e0d98b" alt="COMEDY CENTRAL">
-            </a>
-        </li>
-        <!-- 203 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/foodnetwork/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a27b67dc9287e3c4c599913a8caf3ff0')">
-                <img src="https://s3.aynaott.com/storage/582675c375dfa47c2d66e6639fcd2eac" alt="Food Network">
-            </a>
-        </li>
-        <!-- 204 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/hbo2/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=cc4ce6f43e8d6cc5d9a5b51ab0f907c4')">
-                <img src="https://s3.aynaott.com/storage/b64c028d8c0895ed81f3201d5979f7ba" alt="HBO 2">
-            </a>
-        </li>
-        <!-- 205 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/lifetime/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a1323b966bd056434632e7f03e5b28b7')">
-                <img src="https://s3.aynaott.com/storage/90258e6758834a12979d27097bee04a7" alt="LIFE TIME">
-            </a>
-        </li>
-        <!-- 206 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/tlc_hd/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=86b71c44e140ef53fd5951c12e0137da')">
-                <img src="https://s3.aynaott.com/storage/ba3c9fa1144bc65322f8ae3a1bb69cc9" alt="TLC">
-            </a>
-        </li>
-        <!-- 207 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/travelxp/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=aed05ce9c2b17f2741656d05002284af')">
-                <img src="https://s3.aynaott.com/storage/a7f87f1e71905ee14429ed26abd29b2a" alt="Travel Channel">
-            </a>
-        </li>
-        <!-- 208 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/TheWeatherChannel/index.m3u8?e=1779508655&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6d4a0e397157b1dcf88dffdd7b0030d4')">
-                <img src="https://s3.aynaott.com/storage/67e08c23033802b4443baf81d1b048bf" alt="WEATHER CHANNEL">
-            </a>
-        </li>
-        <!-- 209 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/cp24/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=898f31e642631ce2d765b60ce79865c1')">
-                <img src="https://s3.aynaott.com/storage/9f391e512f41bec54b163b83667da453" alt="CP 24">
-            </a>
-        </li>
-        <!-- 210 -->
-        <li>
-            <a onclick="playChannel('https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-actionhollywood-samsungnz/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/baef6dd41c3ee6fabbb59bb8403cc1eb" alt="Action Hollywood Movies">
-            </a>
-        </li>
-        <!-- 211 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/GoldminesBollywood/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/e92e9e2fb70909f3dd30a8d89e644119" alt="Goldmines Bollywood">
-            </a>
-        </li>
-        <!-- 212 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/AssamTalks/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=b420a91b78b963fc31ffbd137168f4b5')">
-                <img src="https://s3.aynaott.com/storage/e7d8cff366343b850d04a655c6fbf2ff" alt="Assam Talks">
-            </a>
-        </li>
-        <!-- 213 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/Dangal/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=ae97ff809d50e56344af5d463db8f128')">
-                <img src="https://s3.aynaott.com/storage/cb1c3e153b951760fb0396cd27b8a715" alt="Dangal">
-            </a>
-        </li>
-        <!-- 214 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/9xjalwa/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=391c90a4ce61953e6881a980af5b84ad')">
-                <img src="https://s3.aynaott.com/storage/d2d8f00a60dc64dad6c0181cd86f7869" alt="9x Jalwa">
-            </a>
-        </li>
-        <!-- 215 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/9X_Tashan/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=0261358d409a98da30b44652bfb6f249')">
-                <img src="https://s3.aynaott.com/storage/5d052254516639955d06182690d3fda2" alt="9X Tashan">
-            </a>
-        </li>
-        <!-- 216 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/Dhinchaak/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=79ec70fc03c6ae0338bacb6e83934310')">
-                <img src="https://s3.aynaott.com/storage/f4edcca7247bbb4a263a51d7ebb82282" alt="Dhinchaak">
-            </a>
-        </li>
-        <!-- 217 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/1473/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/d90eb718a6674494d2dac28e1d96bf44" alt="Khushboo">
-            </a>
-        </li>
-        <!-- 218 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/Network10/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=2ee0cb1c379b768268fe232e0783f069')">
-                <img src="https://s3.aynaott.com/storage/09e356a3181cc613cf5680619d50a5f5" alt="Network 10">
-            </a>
-        </li>
-        <!-- 219 -->
-        <li>
-            <a onclick="playChannel('https://live20.bozztv.com/giatvplayout7/giatv-209611/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/f7bfca4f0a3860067bf2eac37f41214c" alt="Sony ATTH">
-            </a>
-        </li>
-        <!-- 220 -->
-        <li>
-            <a onclick="playChannel('https://vods2.aynaott.com/hindimovies/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/3132515182ec50091b496fe515564084" alt="Hindi Movie Classic 24">
-            </a>
-        </li>
-        <!-- 221 -->
-        <li>
-            <a onclick="playChannel('http://awaazindia.livebox.co.in/AwaazIndaTVhls/Live.m3u8')">
-                <img src="https://s3.aynaott.com/storage/6f17785db48e7b5fb68b7d441ad3ad10" alt="Awaaz India">
-            </a>
-        </li>
-        <!-- 222 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/cartoonnetwork/index.m3u8?e=1779508656&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=e334ba9112f155bb68d3b5f0f6a7343b')">
-                <img src="https://s3.aynaott.com/storage/a89142109d049ae325fd1681b50bfffb" alt="Cartoon Network">
-            </a>
-        </li>
-        <!-- 223 -->
-        <li>
-            <a onclick="playChannel('https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1298290/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/e15930189f48df6d429c269bd1edea99" alt="PBS Kids">
-            </a>
-        </li>
-        <!-- 224 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/disneyjr/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=4cd1106968e114f651dcc0bcb92ffaef')">
-                <img src="https://s3.aynaott.com/storage/31a070024b6516e3738baec70168f0b6" alt="Disney JR">
-            </a>
-        </li>
-        <!-- 225 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/nicktoons/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=97b724a184e26e7e8fb663775225af77')">
-                <img src="https://s3.aynaott.com/storage/a130687320f6b07db4bc3729b9d5e96e" alt="Nicktoons">
-            </a>
-        </li>
-        <!-- 226 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/nickjr/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=3d86e7123a7ec8b300e8c67e783d962d')">
-                <img src="https://s3.aynaott.com/storage/921409bfe77e2e3d32492116bc22fa3e" alt="Nickjr">
-            </a>
-        </li>
-        <!-- 227 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/3abnkids/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=a7165e6b116544650d9b84262bde6f46')">
-                <img src="https://s3.aynaott.com/storage/76e36f75bf11c815a76c5622d627c814" alt="3ABN Kids">
-            </a>
-        </li>
-        <!-- 228 -->
-        <li>
-            <a onclick="playChannel('https://s.emisoras.tv:8081/diostevekids/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/6712a3c8a28689cfda4148faf095fa67" alt="Dios Te Ve Kids">
-            </a>
-        </li>
-        <!-- 229 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/MoonbugKids/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=8f2e3b034d1080b7e8e3398255c20e6a')">
-                <img src="https://s3.aynaott.com/storage/d9b8deaf735ee0954260c7b3b61f508d" alt="Moonbug Kids">
-            </a>
-        </li>
-        <!-- 230 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/disney/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=96bbd3048200bcd5ada2c32a980a0aeb')">
-                <img src="https://s3.aynaott.com/storage/a0c74b576321da5aa33a69806401caf1" alt="Disney Channel">
-            </a>
-        </li>
-        <!-- 231 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/disneyxd/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f5fd04927b13f3d3d0226d41d6e69f8e')">
-                <img src="https://s3.aynaott.com/storage/f9b945284524683f1de8beb07ded8989" alt="Disney XD">
-            </a>
-        </li>
-        <!-- 232 -->
-        <li>
-            <a onclick="playChannel('https://tvsen5.aynaott.com/familyjr/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=f3d53ef2ec2242d438c035c65cebe32f')">
-                <img src="https://s3.aynaott.com/storage/ca9edd253c97a2c67fcd856f43a31702" alt="Family JR">
-            </a>
-        </li>
-        <!-- 233 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/nicklodean/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=5d549e533fd27e8c7bd7710521d82275')">
-                <img src="https://s3.aynaott.com/storage/bb2375af2d1ff8666f2c24fbcec3c541" alt="Nickelodeon">
-            </a>
-        </li>
-        <!-- 234 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/teennick/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=35adeebe7e5ee68abf4e33c26103f5ea')">
-                <img src="https://s3.aynaott.com/storage/5739277278d596533abbacc60ea694be" alt="Teen Nick">
-            </a>
-        </li>
-        <!-- 235 -->
-        <li>
-            <a onclick="playChannel('https://raw.githubusercontent.com/ibstvofficial/IBS-TV-special-movies.m3u/refs/heads/main/1777291577865.mp4')">
-                <img src="https://bdixiptvbd.com/logo.png" alt="--- [ MOVIES PROMOTION ] ---">
-            </a>
-        </li>
-        <!-- 236 -->
-        <li>
-            <a onclick="playChannel('https://mediaserver.abnvideos.com/streams/abnurdu.m3u8')">
-                <img src="https://s3.aynaott.com/storage/9882913a8d68aa99c0501b64749d6320" alt="ABN">
-            </a>
-        </li>
-        <!-- 237 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/229/master.m3u8')">
-                <img src="https://s3.aynaott.com/storage/3458d0d9097a8283a94a13374bcbf5c7" alt="Channel Win">
-            </a>
-        </li>
-        <!-- 238 -->
-        <li>
-            <a onclick="playChannel('https://tvsen6.aynaott.com/eman/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=17fb5b6f80e7fa9e4003e0eac7bea5c5')">
-                <img src="https://s3.aynaott.com/storage/09d759c7bb93fa3fb76014c8936201ce" alt="Eman Channel">
-            </a>
-        </li>
-        <!-- 239 -->
-        <li>
-            <a onclick="playChannel('https://tvsen7.aynaott.com/takbeer/index.m3u8?e=1779508657&amp;u=78be6644-0a65-48ec-81a4-089ac65a2619&amp;token=6cb57dc3cbea4a86994a5b3bcc84ac25')">
-                <img src="https://s3.aynaott.com/storage/5b8848e0ec2d5cd133fadef42317dec5" alt="TAQBEER">
-            </a>
-        </li>
-        <!-- 240 -->
-        <li>
-            <a onclick="playChannel('https://jk3lz82elw79-hls-live.5centscdn.com/harPalGeo/955ad3298db330b5ee880c2c9e6f23a0.sdp/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/e0d54d73e6b9cf211cd760650467e596" alt="Geo ENT">
-            </a>
-        </li>
-        <!-- 241 -->
-        <li>
-            <a onclick="playChannel('https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg00684-accuweather-accuweather-plex/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/21992f5e8529a9d2a94b6edf917dbd8f" alt="AccuWeather">
-            </a>
-        </li>
-        <!-- 242 -->
-        <li>
-            <a onclick="playChannel('https://247wlive.foxweather.com/stream/index.m3u8')">
-                <img src="https://s3.aynaott.com/storage/6dd20ecde19ea3f6b6cf6c040701973e" alt="Fox Weather">
-            </a>
-        </li>
-        <!-- 243 -->
-        <li>
-            <a onclick="playChannel('https://jukin-weatherspy-2-in.samsung.wurl.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/b0bdea4df810e2d46f689cbb6c990c91" alt="Weather SPY">
-            </a>
-        </li>
-        <!-- 244 -->
-        <li>
-            <a onclick="playChannel('https://livecdn.live247stream.com/discoverpakistan/web/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/1b9208802bbf0cc01f1e8319b0ec633d" alt="Discover Pikstan">
-            </a>
-        </li>
-        <!-- 245 -->
-        <li>
-            <a onclick="playChannel('https://korhls.persiana.live/hls/stream.m3u8')">
-                <img src="https://s3.aynaott.com/storage/f24e50516ccf6b3e94a4ca749ccb3533" alt="Persiana Korea">
-            </a>
-        </li>
-        <!-- 246 -->
-        <li>
-            <a onclick="playChannel('https://livetv.powerapp.com.tr/powerturkTV/powerturkhd.smil/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/c4f27e64c99b50629e7021b99ac9387a" alt="Power Turk">
-            </a>
-        </li>
-        <!-- 247 -->
-        <li>
-            <a onclick="playChannel('https://autentic-adventure-earth-1-eu.rakuten.wurl.tv/playlist.m3u8')">
-                <img src="https://s3.aynaott.com/storage/13c04e44967d653c70eac9670b47fa5d" alt="Adventure Earth">
-            </a>
-        </li>
-        <!-- 248 -->
-        <li>
-            <a onclick="playChannel('https://mumt03.tangotv.in/AAKASHAATH/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s142510_ld_h15_ab.png?lock=720x540" alt="Aakaash Aath (576p)">
-            </a>
-        </li>
-        <!-- 249 -->
-        <li>
-            <a onclick="playChannel('https://app.ncare.live/c3VydmVyX8RpbEU9Mi8xNy8yMDE0GIDU6RgzQ6NTAgdEoaeFzbF92YWxIZTO0U0ezN1IzMyfvcGVMZEJCTEFWeVN3PTOmdFsaWRtaW51aiPhnPTI/amarbanglatv.stream/playlist.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/Amaar_Bangla.png" alt="Aamar Bangla (720p)">
-            </a>
-        </li>
-        <!-- 250 -->
-        <li>
-            <a onclick="playChannel('https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/ananda-livetv/master.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s142518_ld_h15_aa.png?lock=720x540" alt="ABP Ananda (1080p)">
-            </a>
-        </li>
-        <!-- 251 -->
-        <li>
-            <a onclick="playChannel('https://account19.livebox.co.in/Anandabarta2hls/live.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/Anand_Barta.png" alt="Ananda Barta (720p)">
-            </a>
-        </li>
-        <!-- 252 -->
-        <li>
-            <a onclick="playChannel('https://app.ncare.live/c3VydmVyX8RpbEU9Mi8xNy8yMDE0GIDU6RgzQ6NTAgdEoaeFzbF92YWxIZTO0U0ezN1IzMyfvcGVMZEJCTEFWeVN3PTOmdFsaWRtaW51aiPhnPTI2/atnbanglauk-off.stream/playlist.m3u8')">
-                <img src="https://i.imgur.com/vFpjggf.png" alt="ATN Bangla UK (576p)">
-            </a>
-        </li>
-        <!-- 253 -->
-        <li>
-            <a onclick="playChannel('https://bozztv.com/rongo/rongo-Channel24HD/index.m3u8')">
-                <img src="https://i.imgur.com/4JLkaF7.png" alt="Channel 24 (1080p)">
-            </a>
-        </li>
-        <!-- 254 -->
-        <li>
-            <a onclick="playChannel('http://103.72.101.252:8080/live/1369.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_COLORS_BANGLA/images/LOGO_HD/image.png" alt="Colors Bangla (576p)">
-            </a>
-        </li>
-        <!-- 255 -->
-        <li>
-            <a onclick="playChannel('http://103.72.101.252:8080/live/1657.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_COLORS_BANGLA_CINEMA/images/LOGO_HD/image.png" alt="Colors Bangla Cinema (576p)">
-            </a>
-        </li>
-        <!-- 256 -->
-        <li>
-            <a onclick="playChannel('http://103.229.254.25:7001/play/a0ds/index.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_COLORS_BANGLA/images/LOGO_HD/image.png" alt="Colors Bangla  (1080p)">
-            </a>
-        </li>
-        <!-- 257 -->
-        <li>
-            <a onclick="playChannel('https://mumt05.tangotv.in/DDBANGLA/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s142778_ld_h15_aa.png?lock=720x540" alt="DD Bangla (576p)">
-            </a>
-        </li>
-        <!-- 258 -->
-        <li>
-            <a onclick="playChannel('https://mumt01.tangotv.in/DDTRIPURA/index.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_DD_TRIPURA/images/LOGO_HD/image.png" alt="DD Tripura (576p)">
-            </a>
-        </li>
-        <!-- 259 -->
-        <li>
-            <a onclick="playChannel('https://streaming.madanichannel.tv/static/streaming-playlists/hls/d3e49b76-ac06-4689-a641-9200445b647f/master.m3u8')">
-                <img src="https://i.imgur.com/vIJTVia.png" alt="Madani Channel Bangla (1080p)">
-            </a>
-        </li>
-        <!-- 260 -->
-        <li>
-            <a onclick="playChannel('http://alvetv.com/moviebanglatv/8080/index.m3u8')">
-                <img src="https://www.jagobd.com/wp-content/uploads/2016/02/moviebangla.jpg?x50681" alt="Movie Bangla">
-            </a>
-        </li>
-        <!-- 261 -->
-        <li>
-            <a onclick="playChannel('https://chlivemta1.akamaized.net/hls/live/2008145/mta1/playlist.m3u8')">
-                <img src="https://i.imgur.com/bYiRfAg.png" alt="MTA1 World (720p)">
-            </a>
-        </li>
-        <!-- 262 -->
-        <li>
-            <a onclick="playChannel('https://chlivemta1.akamaized.net/hls/live/2008145/mta2/playlist.m3u8')">
-                <img src="https://i.imgur.com/aVts0sz.png" alt="MTA2 Europe (720p)">
-            </a>
-        </li>
-        <!-- 263 -->
-        <li>
-            <a onclick="playChannel('https://livemtaasia.akamaized.net/hls/live/2039224/mta6asia/playlist.m3u8')">
-                <img src="https://i.imgur.com/nhCNPJI.png" alt="MTA6 Asia (1080p)">
-            </a>
-        </li>
-        <!-- 264 -->
-        <li>
-            <a onclick="playChannel('https://livemtaasia.akamaized.net/hls/live/2039224/mtaasia2/playlist.m3u8')">
-                <img src="https://i.imgur.com/3Nl8Tpu.png" alt="MTA7 Asia (1080p)">
-            </a>
-        </li>
-        <!-- 265 -->
-        <li>
-            <a onclick="playChannel('http://149.71.34.166:8002/play/a013/index.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s143574_ld_h15_aa.png?lock=720x540" alt="National Geographic  (576p)">
-            </a>
-        </li>
-        <!-- 266 -->
-        <li>
-            <a onclick="playChannel('http://149.71.34.166:8002/play/a012/index.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NAT_GEO_WILD/images/LOGO_HD/image.png" alt="National Geographic Wild  (1080p)">
-            </a>
-        </li>
-        <!-- 267 -->
-        <li>
-            <a onclick="playChannel('http://149.71.34.166:8000/play/a00u/index.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NICK/images/LOGO_HD/image.png" alt="Nickelodeon (576p)">
-            </a>
-        </li>
-        <!-- 268 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/1231/master.m3u8')">
-                <img src="https://i.imgur.com/dpI7XPC.png" alt="R Plus Gold (720p)">
-            </a>
-        </li>
-        <!-- 269 -->
-        <li>
-            <a onclick="playChannel('https://vg-republictvlive.akamaized.net/v1/master/611d79b11b77e2f571934fd80ca1413453772ac7/vglive-sk-456368/main.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_RSYMDOT_BANGLA/images/LOGO_HD/image.png" alt="Republic Bangla (1080p)">
-            </a>
-        </li>
-        <!-- 270 -->
-        <li>
-            <a onclick="playChannel('https://cdn-4.pishow.tv/live/1039/master.m3u8')">
-                <img src="https://dtil.tmsimg.com/assets/s143733_ld_h15_aa.png?lock=720x540" alt="Rupasi Bangla (720p)">
-            </a>
-        </li>
-        <!-- 271 -->
-        <li>
-            <a onclick="playChannel('https://server.livelegitpro.in/samaykolkata/samaykolkata/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/Samay_Kolkata.png" alt="Samay Kolkata (1080p)">
-            </a>
-        </li>
-        <!-- 272 -->
-        <li>
-            <a onclick="playChannel('http://103.122.249.134:8000/play/a051')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_SONIC/images/LOGO_HD/image.png" alt="Sonic (576p)">
-            </a>
-        </li>
-        <!-- 273 -->
-        <li>
-            <a onclick="playChannel('https://sl.vodep39240327.workers.dev/channel/SONY%20YAY.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_SONY_YAY/images/LOGO_HD/image.png" alt="Sony Yay! (1080p) [Geo-blocked]">
-            </a>
-        </li>
-        <!-- 274 -->
-        <li>
-            <a onclick="playChannel('https://deltatesttatasky.akamaized.net/out/i/968284.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_TRAVELXP/images/LOGO_HD/image.png" alt="Travelxp 4K R (2160p) [Geo-blocked]">
-            </a>
-        </li>
-        <!-- 275 -->
-        <li>
-            <a onclick="playChannel('https://amg00416-amg00416c9-samsung-in-4882.playouts.now.amagi.tv/playlist/amg00416-travelxp-travelxphd-samsungin/playlist.m3u8')">
-                <img src="https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_TRAVELXP/images/LOGO_HD/image.png" alt="Travelxp  (1080p) [Geo-blocked]">
-            </a>
-        </li>
-        <!-- 276 -->
-        <li>
-            <a onclick="playChannel('https://server.zillarbarta.com/zbbhakti/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/zbbhakti.png" alt="ZB Bhakti (720p)">
-            </a>
-        </li>
-        <!-- 277 -->
-        <li>
-            <a onclick="playChannel('https://server.zillarbarta.com/zbcatun/video.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/zbcatun.png" alt="ZB Cartoon (1080p)">
-            </a>
-        </li>
-        <!-- 278 -->
-        <li>
-            <a onclick="playChannel('https://server.zillarbarta.com/ZBCINEMA/index.m3u8')">
-                <img src="https://jiotvimages.cdn.jio.com/dare_images/images/ZBCINEMA.png" alt="ZB Cinema (720p)">
-            </a>
-        </li>
-    </ul>
+    <div class="ras-wordmark">
+      <span class="w-ras">RAS</span>
+      <span class="w-live">LIVE</span>
+      <span class="w-tv">TV</span>
     </div>
+
+    <div class="ras-line"></div>
+
+    <div class="ras-arc-wrap">
+      <div class="ras-arc ras-arc-1"></div>
+      <div class="ras-arc ras-arc-2"></div>
+      <div class="ras-arc ras-arc-3"></div>
+    </div>
+
+    <div class="ras-progress-track">
+      <div class="ras-progress-fill"></div>
+    </div>
+
+    <div class="ras-status">সংযোগ স্থাপন হচ্ছে</div>
+  </div>
 </div>
+            <!-- CHANNEL LIST -->
+            <div class="col-xs-12 col-md-2 channel-list">
+                <ul id="channel-container">
+                    <!-- 1 -->
+                    <li>
+                        <a onclick="playChannel('https://tvsen7.aynaott.com/tsports-hd/index.m3u8')">
+                            <img src="https://assets-prod.services.toffeelive.com/w_480,q_75,f_webp/ljE2lZ0BNnOkwJLW9lrg/posters/b4bee75a-b8a3-4594-b562-6e3910d71625.png" alt="BAN vs PAK">
+                        </a>
+                    </li>
+                    <!-- 2 -->
+                    <li>
+                        <a onclick="playChannel('https://tvsen7.aynaott.com/sspts1/index.m3u8')">
+                            <img src="https://i.postimg.cc/SNSpfbQr/Star-Sports-1-HD.png" alt="Star Sports 1">
+                        </a>
+                    </li>
+                    <!-- 3 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/t-sports-hd/index.m3u8?token=d02a1e18cd6f2e69e70494d6f8e0ec68b2e02d56-df31458ed0245a67514b01803787417c-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/t-sports-hd.png" alt="T SPORTS HD">
+                        </a>
+                    </li>
+                    <!-- 4 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/espn/index.m3u8?token=71075fb0e3257a90c27c7a341653d39fcea12cfd-5cc0fdff1da7e71f1479fa54a08e6660-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/espn.png" alt="SONY ESPN">
+                        </a>
+                    </li>
+                    <!-- 5 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sony_sports_1_hd/index.m3u8?token=01cc610a0a34f376fabe83227c92bce2ef60e3a6-cc487324a8e08cb0989d0e16c1c53d0f-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/sony_sports_1_hd.png" alt="SONY TEN SPORTS 1 HD">
+                        </a>
+                    </li>
+                    <!-- 6 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sony_sports_2_hd/index.m3u8?token=278637aca8672dd556d23e56f557ff9abdeb426f-65f8f52c80ff1b6d078d0a6ea9d23e2b-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/sony_sports_2_hd.png" alt="SONY TEN SPORTS 2 HD">
+                        </a>
+                    </li>
+                    <!-- 7 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sony_sports_5_hd/index.m3u8?token=9d40d8f13372a9a734f9a7a109440912e42c9fc8-8df82e7e63bc9defc34e9164363549ac-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sony_sports_5_hd.png" alt="SONY TEN SPORTS 5 HD">
+                        </a>
+                    </li>
+                    <!-- 8 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/ten_cricket/index.m3u8?token=9ed79bab711f688069a66e0d7975b1a69454502c-2d70255adc2bbda686bfc3b0b96c2325-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/ten_cricket.png" alt="SONY TEN CRICKET">
+                        </a>
+                    </li>
+                    <!-- 9 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cricket-gold/index.m3u8?token=a4e4cff12545bfd8bc54cda239dd5de46b92abaa-7c2bb9c4efb57b0da9542ed53dfb6156-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/cricket-gold.png" alt="CRICKET GOLD">
+                        </a>
+                    </li>
+                    <!-- 10 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/willow-tv/index.m3u8?token=840e24a56cb9926d6768d3be9eaced78ae6246c3-55b6cce0b6acf7e83e8741ce35dac1c9-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/willow-tv.png" alt="WILLOW TV">
+                        </a>
+                    </li>
+                    <!-- 11 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/xtrem-sports/index.m3u8?token=9b12ceb18b821b0a4bf2b8be7afc2c1ae3ea143b-03dc4251fb637a610cf9dac233725ed8-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/xtrem-sports.png" alt="XTREM SPORTS">
+                        </a>
+                    </li>
+                    <!-- 12 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sports-first-tv/index.m3u8?token=e9ee1153f7b7376840ef980280e756cc7a0937f7-7df0be3e083bb18681de46a127b241a7-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/sports-first-tv.png" alt="SPORTS FIRST TV">
+                        </a>
+                    </li>
+                    <!-- 13 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/talk-sport/index.m3u8?token=bb8f0fa7c954cdd273c9ddc4856d55204fb20830-b5ea9bc6c6c8ae0b7fccc7b421ea5841-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/talk-sport.png" alt="TALK SPORT">
+                        </a>
+                    </li>
+                    <!-- 14 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/fox-sports-2/index.m3u8?token=62278aa2719d656e2370b77f841f7b39835b5653-02f5f0479a502053c5dbafcb3d535303-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/fox-sports-2.png" alt="FOX SPORTS 2">
+                        </a>
+                    </li>
+                    <!-- 15 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/a-sports/index.m3u8?token=6d39a5903c572eb9e7b83a6f920f8ae5ccadcc66-03d292557fdb575b60f6de77b11ac35d-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/a-sports.png" alt="A SPORTS">
+                        </a>
+                    </li>
+                    <!-- 16 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sports-grid/index.m3u8?token=f3cad5e24f0e8e1df14b91c80bbb6359d9334138-d1d5a5a3440e9d61980a4b4fef4bfc17-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/sports-grid.png" alt="SPORTS GRID">
+                        </a>
+                    </li>
+                    <!-- 17 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/more-then-sports-tv/index.m3u8?token=4299c4b4cc522339f98f50d116b378ab873ac52c-0b4b2a4addf28ba7eea7c2fb771b3a6e-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/more-then-sports-tv.png" alt="MORE THEN SPORTS TV">
+                        </a>
+                    </li>
+                    <!-- 18 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bahrain-sports-1/index.m3u8?token=4d4f671c9d24888a3c3d5d6e300b2dbd2eab3542-304bf6cfaf875bdfe9ee0a92a19cc399-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bahrain-sports-1.png" alt="BAHRAIN SPORTS 1">
+                        </a>
+                    </li>
+                    <!-- 19 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ptv-sports/index.m3u8?token=5b194da15cffdfd149ad0a234c456d4dd3ec1dd9-13bb4dead7b9906c8cc27f176e6c156c-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/ptv-sports.png" alt="PTV SPORTS">
+                        </a>
+                    </li>
+                    <!-- 20 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dd-sports/index.m3u8?token=a1bb4434c807232c8111a657ccb3cfcbdb39c9e8-1d25cdf3e267d4fde139604ec635678a-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/dd-sports.png" alt="DD SPORTS">
+                        </a>
+                    </li>
+                    <!-- 21 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nbc-sports/index.m3u8?token=ca68d266ee4a9f6fc871f5e2fc52040f492f0db8-77d87a91d484f0d486fd5cb26bb0c8e6-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/nbc-sports.png" alt="NBC SPORTS">
+                        </a>
+                    </li>
+                    <!-- 22 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/oman-sports-tv/index.m3u8?token=f381838fc9ab495f5119fbdc2ca888bce8db6148-8335ca3636cdabe3779aac3606d65e7b-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/oman-sports-tv.png" alt="OMAN SPORTS TV">
+                        </a>
+                    </li>
+                    <!-- 23 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sports-fishing-tv/index.m3u8?token=51289b230378879a0098ff216d8bd4dea95d207a-5ec02dc47e46d6d1c26962accf0de470-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sports-fishing-tv.png" alt="SPORTS FISHING TV">
+                        </a>
+                    </li>
+                    <!-- 24 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/speed-sports-1/index.m3u8?token=f32d46d123dfc9ea47a7262898a5b7d1fc04a397-3e49591c0361a676860ecd4b081deb79-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/speed-sports-1.png" alt="SPEED SPORTS 1">
+                        </a>
+                    </li>
+                    <!-- 25 -->
+                    <li>
+                        <a onclick="playChannel('https://tvsen3.aynaott.com/n64PH4YL/index.m3u8')">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4bIqh7m8AlSK-6ZrLOT2p1DFCZcJOZ9w-MxIRUnIQoehma1PkrDQ9B48&s=10" alt="Star Jalsha">
+                        </a>
+                    </li>
+                    <!-- 26 -->
+                    <li>
+                        <a onclick="playChannel('https://yupptvcatchupire.yuppcdn.net/preview/zeebangla/2500.m3u8')">
+                            <img src="https://www.dodawards.in/wp-content/uploads/2024/03/001.png" alt="ZEE Bangla">
+                        </a>
+                    </li>
+                    <!-- 27 -->
+                    <li>
+                        <a onclick="playChannel('https://live-bangla.akamaized.net/liveabr/playlist.m3u8')">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZ9l3CospNm55oEn0V7oc67JGpBwq5_qKfK5Xtnhfpm0WQXls0kfvpNyc&s=10" alt="Enterr10">
+                        </a>
+                    </li>
+                    <!-- 28 -->
+                    <li>
+                        <a onclick="playChannel('https://live-stream.utkalbongo.com/hls/livebanglatvstream.m3u8')">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJh-9D8ZXy5M4MAouOuPBYXZXOUlCmZ8DrwXTxLUBRp1oP3Lu2-_OGTLk&s=10" alt="Bangla Plus">
+                        </a>
+                    </li>
+                    <!-- 29 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/gazi-tv/index.m3u8?token=1317569d519fefc166d8f1786a1055e5ac3a80c7-ca75e350f2f28c10808feb9be439454b-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/gazi-tv.png" alt="GAZI TV">
+                        </a>
+                    </li>
+                    <!-- 30 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sonyaath/index.m3u8?token=67a50c02b844848bff15f989aabacf94f73cfeb4-481761f72d90012d5aeacf1fbb6fa4e5-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/33.png" alt="SONY AATH">
+                        </a>
+                    </li>
+                    <!-- 31 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dw-news/index.m3u8?token=11f64973c4994aa1965fa105c2ebcb06b91af779-5c5a6f6018e40adc8222e944b5ceb536-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/dw-news.png" alt="DW NEWS">
+                        </a>
+                    </li>
+                    <!-- 32 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/mtv/index.m3u8?token=bc284be72d09254f966c4159484eb01101c396c4-2b5995bbce39d6c3adf341238d9a4f6c-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/mtv.png" alt="MTV">
+                        </a>
+                    </li>
+                    <!-- 33 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/jamuna-tv/index.m3u8?token=dd78f34a0be33ffa7e46ea7c3cc8de9c49a060e5-acfe80c398cf085601803a5e9a8db5df-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/jamuna-tv.png" alt="JAMUNA TV">
+                        </a>
+                    </li>
+                    <!-- 34 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/channel-24/index.m3u8?token=660be7bd2cedf394b1264685238c0e0f4f932791-bfcf967e0658a7ec0a55b15cf88b45dc-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/channel-24.png" alt="CHANNEL 24">
+                        </a>
+                    </li>
+                    <!-- 35 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/channel-s/index.m3u8?token=b6e0bb3e558931ac133a201c14fab675ded66ac1-96daada0e34fa18a255187ef272b99ab-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/channel-s.png" alt="CHANNEL S">
+                        </a>
+                    </li>
+                    <!-- 36 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/somoy_tv/index.m3u8?token=a99a4e7296cb2eb8c1ed77e87710592baabe14cc-7a7952df3b80225b046a24cda5a51bdb-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/17.png" alt="SOMOY TV">
+                        </a>
+                    </li>
+                    <!-- 37 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/asian-tv/index.m3u8?token=e44216b3ccaf7a651d9b1fe24d60c07147230e24-239521c3e0b66d60145246fdc2fa5c6d-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/asian-tv.png" alt="ASIAN TV">
+                        </a>
+                    </li>
+                    <!-- 38 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/atn-bangla/index.m3u8?token=168f92b5f370276fd7714e615ec30b9a4242ff1a-ea2d567f1c4a5fb3a1896b8f646ef09a-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/atn-bangla.png" alt="ATN BANGLA">
+                        </a>
+                    </li>
+                    <!-- 39 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/atn-news/index.m3u8?token=ccf82d8e485ce18dabda335dd54f0b504e71294d-22f50cc785205fa155e6b68fa3edbc7c-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/atn-news.png" alt="ATN NEWS">
+                        </a>
+                    </li>
+                    <!-- 40 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/global-tv/index.m3u8?token=f63c91884302c437bef790221bb28b13bd0f83fc-31f768aec017f01c1d5145f09ee9f1d7-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/global-tv.png" alt="GLOBAL TV">
+                        </a>
+                    </li>
+                    <!-- 41 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ananda-tv/index.m3u8?token=8da8cd6ac54a1142841bad335a1cd6e8b7eb5c77-255dd0fe03095ee76ecc9356a2f0980e-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/ananda-tv.png" alt="ANANDA TV">
+                        </a>
+                    </li>
+                    <!-- 42 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bangla-tv/index.m3u8?token=5728b619a3c5134ea5d4b6a12c2d9621272f6338-ba76ac51a4132915c65fff8ea0ee3775-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bangla-tv.png" alt="BANGLA TV">
+                        </a>
+                    </li>
+                    <!-- 43 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/boishakhi-tv/index.m3u8?token=7bab726acceb58eb745fcf7b5eecbfd17a2cd0ce-be9fb3cac544e0cbff358a9bb01c5b52-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/boishakhi-tv.png" alt="BOISHAKHI TV">
+                        </a>
+                    </li>
+                    <!-- 44 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/channel-9/index.m3u8?token=b164e8519bdcdcec3e540179a8700635f73227f0-7a1eb6de6158f26614a8ebc20be8d7ad-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/channel-9.png" alt="CHANNEL 9">
+                        </a>
+                    </li>
+                    <!-- 45 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/channel-i/index.m3u8?token=133e5a68a276a02e8478a6783feaaecdde6fe82e-fcec16237406c0c40da688d118fe6c58-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/channel-i.png" alt="CHANNEL I">
+                        </a>
+                    </li>
+                    <!-- 46 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dbc-news/index.m3u8?token=9fc901f5dfbe08d8f885feb29cf97ddbc681f12d-d826f7962eaa9b9bdf05b67594473147-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/dbc-news.png" alt="DBC NEWS">
+                        </a>
+                    </li>
+                    <!-- 47 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ekattor-tv/index.m3u8?token=0d61ea9bdad8a08ed97e01aae9819d0626ed8106-e8e9cda452531bff333f7fb4238f7cec-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/ekattor-tv.png" alt="EKATTOR TV">
+                        </a>
+                    </li>
+                    <!-- 48 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/deepto-tv/index.m3u8?token=61e8b5f18407d9b538016a0e5eff6c44bff59d54-54cc3e7189080f07637dd0d65e154838-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/deepto-tv.png" alt="DEEPTO TV">
+                        </a>
+                    </li>
+                    <!-- 49 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/desh-tv/index.m3u8?token=28d3a578ce1be4a425a7a04350baacdaedd0d20c-60b7d12cd747da3cf9dede512d264820-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/desh-tv.png" alt="DESH TV">
+                        </a>
+                    </li>
+                    <!-- 50 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/duronto-tv/index.m3u8?token=24c4f7b11acb00ca8283742d837c022d64c5b7dd-6647a061fcced88da99bdca7402f976d-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/duronto-tv.png" alt="DURONTO TV">
+                        </a>
+                    </li>
+                    <!-- 51 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/independent-tv/index.m3u8?token=d1f4f54c3a81f296a0b6ad5c6975a6cbfb8b33ad-b045a2b99f17bf0815fcf5d9eb89885b-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/independent-tv.png" alt="INDEPENDENT TV">
+                        </a>
+                    </li>
+                    <!-- 52 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/mohona-tv/index.m3u8?token=540ef6c9d7b485d8582255c3046f1ed5d0084b39-4cce04e2bddf2a90c8fae06003fa1989-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/mohona-tv.png" alt="MOHONA TV">
+                        </a>
+                    </li>
+                    <!-- 53 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/movie_bangla/index.m3u8?token=9f12393962961942d7da35c3a620fe0ae54e8094-cd227392d020d1a8a9b4f6c1de829555-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/86.png" alt="MOVIE BANGLA TV">
+                        </a>
+                    </li>
+                    <!-- 54 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/my-tv/index.m3u8?token=7166223cd6104be383ca6365b9a6fccb39159778-4d5a87bda446e872760c58b04de08fe4-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/my-tv.png" alt="MY TV">
+                        </a>
+                    </li>
+                    <!-- 55 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ntv/index.m3u8?token=8b95294ba13dc0b919e3963e477c5a3184ec7238-d540b0f22bc4dd217c82279499006ce1-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/ntv.png" alt="NTV">
+                        </a>
+                    </li>
+                    <!-- 56 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/rtv/index.m3u8?token=1fc77920ebc4cf8766eee3175a2238a453d4cfa5-5b714f3d83d5e9b26d956d1f72579d4e-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/rtv.png" alt="RTV">
+                        </a>
+                    </li>
+                    <!-- 57 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sa-tv/index.m3u8?token=1428cf832c502fffb2cdc4f96bda2b8c218dd7a5-1e50b34f2d813dd08c470b14fcacdb69-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/sa-tv.png" alt="SA TV">
+                        </a>
+                    </li>
+                    <!-- 58 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/islamic_tv/index.m3u8?token=a73eff340a4ae1b09778eb9e921bafb27ddf4064-998abb028de99db9dbb7a21f40e6ed54-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/islamic_tv.png" alt="ISLAMIC TV">
+                        </a>
+                    </li>
+                    <!-- 59 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/rajdhani_tv/index.m3u8?token=ec361bebd59d7e22856873d8b5ea4ea4b886f3b1-d5bec02887a45800f1df25fb62245e14-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/rajdhani_tv.png" alt="RAJDHANI TV">
+                        </a>
+                    </li>
+                    <!-- 60 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ekhon-tv/index.m3u8?token=5f5d577f8c2283497c451429a05fff72e704127a-de6d64626b0ff6d57617393e870ceab2-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/ekhon-tv.png" alt="EKHON TV">
+                        </a>
+                    </li>
+                    <!-- 61 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/comedy-central/index.m3u8?token=1efbada59f2de13ae5b792e379bdf13547d221fc-c5fb6a94e691d771d88cf007a95b0fb0-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/comedy-central.png" alt="COMEDY CENTRAL">
+                        </a>
+                    </li>
+                    <!-- 62 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cooking-tv/index.m3u8?token=25ea7aea3c4b4c349219907b31e1071920bd5c10-4c4ec315703a4e6afda16ce6967b7423-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/cooking-tv.png" alt="COOKING TV">
+                        </a>
+                    </li>
+                    <!-- 63 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/maasranga-tv/index.m3u8?token=a0b23f072b3f8bf46c45eb8be7bc1c2b97b16c46-58aad8454f985623df40e82f8c68c8af-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/maasranga-tv.png" alt="MAASRANGA TV">
+                        </a>
+                    </li>
+                    <!-- 64 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sangeet-bangla/index.m3u8?token=4f09e459e42be40b06844c89d34bd48d9ee9213e-4581e0ed0f17c406640fbb871470ddd0-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sangeet-bangla.png" alt="SANGEET BANGLA">
+                        </a>
+                    </li>
+                    <!-- 65 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/weather-channel/index.m3u8?token=3029d05caba5fd342cb109b750c5d8abeae0d38c-37c766e0bb2c1cc0f3627337aca58911-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/weather-channel.png" alt="WEATHER CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 66 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nfl-network/index.m3u8?token=08c65c6e45e10c415d620ff360b6b0279bfb9b07-2ca09f831ea40517aad13cfc1a75a0bf-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/nfl-network.png" alt="NFL NETWORK">
+                        </a>
+                    </li>
+                    <!-- 67 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bijoy-tv/index.m3u8?token=beab5122fb29e9337e2819fb3f0a7b04865f42e5-54c3f42ce2cb8428f220e40fd8ce8b56-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bijoy-tv.png" alt="BIJOY TV">
+                        </a>
+                    </li>
+                    <!-- 68 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/kolkata-tv/index.m3u8?token=5f26def299e3a0074fbc7b367f7481186fdd23c8-cde77df35dccc7a1c96af053afc1ba13-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/kolkata-tv.png" alt="KOLKATA TV">
+                        </a>
+                    </li>
+                    <!-- 69 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/golf-channel/index.m3u8?token=e9e655a052a71c34cd8cfdf3523a02a0dbecb7c4-ae173f72cabbe398afff91e01af6217c-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/golf-channel.png" alt="GOLF CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 70 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/fx-tv/index.m3u8?token=5f763dc44e1461ce14e70433951ce3234dec954d-9ce54b304280ff1cd710cdb9fb0dc797-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/fx-tv.png" alt="FX TV">
+                        </a>
+                    </li>
+                    <!-- 71 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/btv-ctg/index.m3u8?token=bfb0c69c84a3f19216219ca6f9b9784f710aea6a-8948a0361c6d0da03278ee3d4ee9411f-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/btv-ctg.png" alt="BTV CTG">
+                        </a>
+                    </li>
+                    <!-- 72 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/kids-pang-tv/index.m3u8?token=5226f18132acf046d57da3a5747cbd4f94341c01-6c72f862e50fc7fdcff84ee76ae19052-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/kids-pang-tv.png" alt="KIDS PANG TV">
+                        </a>
+                    </li>
+                    <!-- 73 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/syfy-tv/index.m3u8?token=52071018c007c004f2ffc2d70c38ad9b80fd2e16-b305140defb2dbf064ded16f8c63c209-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/syfy-tv.png" alt="SYFY TV">
+                        </a>
+                    </li>
+                    <!-- 74 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/hgtv/index.m3u8?token=276930752f33162ba9fde65fa5ec90f1dcc5913b-55235a319fe72ddcdf8e3019900c4336-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/hgtv.png" alt="HGTV">
+                        </a>
+                    </li>
+                    <!-- 75 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/food-network/index.m3u8?token=3c5de744a069e7e9894d507c97951a07be320597-97efcf4e21d02d0d17ade9b024f26cc0-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/food-network.png" alt="FOOD NETWORK">
+                        </a>
+                    </li>
+                    <!-- 76 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bravo/index.m3u8?token=2c8b36e18ace913550240bc94542d419001d34be-71c6b98998c5ceaf946312146dd593ef-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bravo.png" alt="BRAVO">
+                        </a>
+                    </li>
+                    <!-- 77 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tv9-bangla/index.m3u8?token=c75626f6390999ad5d9a0bd93447a412c24d7967-425dcacbc4adf303971b27d03484b12a-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/tv9-bangla.png" alt="TV9 BANGLA">
+                        </a>
+                    </li>
+                    <!-- 78 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/eman-channel/index.m3u8?token=a8f31067b732d1778c0a63c837947e43ca092ea2-b0b088f48ef32911813c09e31faef237-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/eman-channel.png" alt="EMAN CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 79 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/deen-tv/index.m3u8?token=c6f976c43c3d74ff87f12ade6fdc1512de1cfa19-043aa3c09c14ac13ecd5d086b235bed3-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/deen-tv.png" alt="DEEN TV">
+                        </a>
+                    </li>
+                    <!-- 80 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/9x-jalwa/index.m3u8?token=ce458519039651157b3c0296b8d9645d21aa5a7c-7599eb1b7799f065d69b6690c25530e1-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/9x-jalwa.png" alt="9X JALWA">
+                        </a>
+                    </li>
+                    <!-- 81 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/trt-world/index.m3u8?token=503591f8e33d1e7bdb9df561330047526fd73a4f-74c64b18a3ee46bfa1f0864beda215ab-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/trt-world.png" alt="TRT WORLD">
+                        </a>
+                    </li>
+                    <!-- 82 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sadhna-prime-news/index.m3u8?token=8fd05cf94853a599fedc9f51d81f45059aca4e89-76ea4a9b201b02207cd8c10886325bb1-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sadhna-prime-news.png" alt="SADHNA PRIME NEWS">
+                        </a>
+                    </li>
+                    <!-- 83 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/news-1-india/index.m3u8?token=4b5afe8b138e7f8d8c32c02cd8e2188c38a65f87-56f33ac5bb1d837cddd19249ca6772f5-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/news-1-india.png" alt="NEWS 1 INDIA">
+                        </a>
+                    </li>
+                    <!-- 84 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/republic-bangla/index.m3u8?token=bd41b37d2f0f4bc0163d18712dd2396d28d1285c-818888147b4a104715aadd24f76285be-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/republic-bangla.png" alt="REPUBLIC BANGLA">
+                        </a>
+                    </li>
+                    <!-- 85 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/fox-5/index.m3u8?token=6efd5e1451ed6b3909bd2d7d9fd4f78a7a09a853-480d237319be99ad33a33d130a83c4c9-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/fox-5.png" alt="FOX 5">
+                        </a>
+                    </li>
+                    <!-- 86 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/republic-tv-bharat/index.m3u8?token=9426c2fd44f35d3587d2ffbf5c2583970fed6838-4ee4cf6abc151de5d4ffcc0c0ce9db88-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/republic-tv-bharat.png" alt="REPUBLIC TV BHARAT">
+                        </a>
+                    </li>
+                    <!-- 87 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tsn-1/index.m3u8?token=aced6a9adfe0ce641e850c609676f73ee0644c5f-763d9805977b82e092e69333257362ab-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/tsn-1.png" alt="TSN 1">
+                        </a>
+                    </li>
+                    <!-- 88 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/pix-11/index.m3u8?token=41975ffa00d972308511d6ebfcf58fdad0c6e8a1-6efb5b77e72eeb3ba7c2a878463c8461-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/pix-11.png" alt="PIX 11">
+                        </a>
+                    </li>
+                    <!-- 89 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/usa-tv/index.m3u8?token=b745e0a58d4ade67c89265f78f0ac65eb319850e-d1aa757bd947ecffbcf06541ffe6948d-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/usa-tv.png" alt="USA TV">
+                        </a>
+                    </li>
+                    <!-- 90 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/fox-business/index.m3u8?token=afbfc26157148ff1a18745b974a8aa97dcbbe67e-fae9080ceff712d0e8d4eff84e1b4f5f-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/fox-business.png" alt="FOX BUSINESS">
+                        </a>
+                    </li>
+                    <!-- 91 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/news-nation/index.m3u8?token=f4a7aed56ada053a960cc23edff42b42f582f2c1-e9b23ffbf4a4cfaf1d5b9cd6acd7dc3a-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/news-nation.png" alt="NEWS NATION">
+                        </a>
+                    </li>
+                    <!-- 92 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cp-24/index.m3u8?token=1b2fcf23df53dca170b56b7f4c49ffdb5b826dc1-3a9d1609aaa8bde238083cfbaca656dc-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/cp-24.png" alt="CP 24">
+                        </a>
+                    </li>
+                    <!-- 93 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nexus-tv/index.m3u8?token=3a64f6321b033255ba546f48d933b9685951d92b-4270b03d6768d572794459289183a031-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/nexus-tv.png" alt="NEXUS TV">
+                        </a>
+                    </li>
+                    <!-- 94 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/news-24-bd/index.m3u8?token=ad45ee35a4a6b108375fa151d8d3196708f12d06-d6e8aa6aa392e5ea93614a7cbd14906f-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/news-24-bd.png" alt="NEWS 24 BD">
+                        </a>
+                    </li>
+                    <!-- 95 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/goal-tv/index.m3u8?token=ad331faeb3fe8919f8775f38b457657da6741a91-25f5492af813eb3b35ad8f3fe3661778-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/goal-tv.png" alt="GOAL TV">
+                        </a>
+                    </li>
+                    <!-- 96 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dhinchaak/index.m3u8?token=bed16c56e61ef15a6d0f44694be0eddadf240932-502fee7e3e54d0cdcf0231d148afee5c-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/dhinchaak.png" alt="DHINCHAAK">
+                        </a>
+                    </li>
+                    <!-- 97 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/channel-win/index.m3u8?token=57bb3fed9880ecd86248f35203d3614681591718-06cc2bc25c456d8a23c6357620833591-1779212122-1779201322')">
+                            <img src="https://tvassets.roarzone.net/images/channel-win.png" alt="CHANNEL WIN">
+                        </a>
+                    </li>
+                    <!-- 98 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/msnbc-news/index.m3u8?token=d9220e7dd9ec34bf37d7aa862f8d2be525d5ff18-1d17ba5b4a9ae265fa845e4532c21228-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/msnbc-news.png" alt="MSNBC NEWS">
+                        </a>
+                    </li>
+                    <!-- 99 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/axs/index.m3u8?token=e26dab5fdda5aec1451fb1eba36ea9a905cee663-0a6c1bbaba1a4e13adeb6c82e4590e67-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/axs.png" alt="AXS">
+                        </a>
+                    </li>
+                    <!-- 100 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/laff-tv/index.m3u8?token=d3247c0f2fe8778f4cde3e60e4f2dd8e3fd3fd0a-a3385c4eed93878e8e35ec3ee697babc-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/laff-tv.png" alt="LAFF TV">
+                        </a>
+                    </li>
+                    <!-- 101 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ibtv-usa/index.m3u8?token=5d1c2e5f85574f3875000bb852fa66e8fdbc517f-125dff87da15d6843ee885f4bf1fcea2-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/ibtv-usa.png" alt="IBTV USA">
+                        </a>
+                    </li>
+                    <!-- 102 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/network-10/index.m3u8?token=522f8669a47ce229dbc427791d38f4b110905993-5111e78773d6ba29987fb833fa1676cb-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/network-10.png" alt="NETWORK 10">
+                        </a>
+                    </li>
+                    <!-- 103 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/life-time/index.m3u8?token=1e7e17865d8b3110a591f4c6e1dd2a23e3588f73-789a020098f78854173c530cdebfcaa8-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/life-time.png" alt="LIFE TIME">
+                        </a>
+                    </li>
+                    <!-- 104 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cbs-tv/index.m3u8?token=599e565aeed62fa2be0e1e320b997e34c1e835f3-ad0a035f7cea7e1cdbb0086cabc64a51-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/cbs-tv.png" alt="CBS TV">
+                        </a>
+                    </li>
+                    <!-- 105 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/power-turk/index.m3u8?token=9782394aa1da83b5c91f6bd6b5902431e15bd918-4f3f12d9036369befbeb59438204d2dc-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/power-turk.png" alt="POWER TURK">
+                        </a>
+                    </li>
+                    <!-- 106 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nat-geo-tv/index.m3u8?token=3f86f2e3c42b34a8ea867f5964f0d1228a4a5385-2ca8bf0f6906739d7e9c6fff35ee28c1-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/nat-geo-tv.png" alt="NAT GEO TV">
+                        </a>
+                    </li>
+                    <!-- 107 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cnbc-tv/index.m3u8?token=e9a0c43fe91c56f1ca6c32a8d7e8979965d4c65f-7965e49b9dfd99d9fba7209829a1d84b-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/cnbc-tv.png" alt="CNBC TV">
+                        </a>
+                    </li>
+                    <!-- 108 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cgtn-docu/index.m3u8?token=917716f5bf7c7e118db5668920a6e2b9249e590a-2f89adcaef2c8b790d30ee850937d218-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/cgtn-docu.png" alt="CGTN DOCU">
+                        </a>
+                    </li>
+                    <!-- 109 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bloomberg-tv/index.m3u8?token=86a83ac8aa926c941c3725346a2b4efc89f0c2db-5673fb65283c377a90bf27d9a8d701f7-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bloomberg-tv.png" alt="BLOOMBERG TV">
+                        </a>
+                    </li>
+                    <!-- 110 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/assam-talks/index.m3u8?token=384ec7a504ce27d26847acefd90fbeff8b432b05-08a502ef9c0d1309d1074e30d9719d6d-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/assam-talks.png" alt="ASSAM TALKS">
+                        </a>
+                    </li>
+                    <!-- 111 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/etv/index.m3u8?token=9b525e320b6655962308fdf28611f3e0426e453d-85d2ba0ea581dd4c28d2c392e6688bf7-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/etv.png" alt="ETV">
+                        </a>
+                    </li>
+                    <!-- 112 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/somoy-news-tv/index.m3u8?token=aa85e3e67fec27ef597eaae21f232db9b2852109-671564be9491c4fc36de0bb7f003aa04-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/somoy-news-tv.png" alt="SOMOY NEWS TV">
+                        </a>
+                    </li>
+                    <!-- 113 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tsn-3/index.m3u8?token=9cfda1496ae29647468bd52af7e12c62a4efa7d7-4b9d253d58a0c992e6150fe5e2e41889-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/tsn-3.png" alt="TSN 3">
+                        </a>
+                    </li>
+                    <!-- 114 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/goldmines-bollywood/index.m3u8?token=044b30c939e8c29e1d8283ffc37ad25f98b0c588-ed3a0a0c6494e37809b8d6d793dd4c1e-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/goldmines-bollywood.png" alt="GOLDMINES BOLLYWOOD">
+                        </a>
+                    </li>
+                    <!-- 115 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bangla-vision/index.m3u8?token=3cbb413ebd43c68fc616d0c52d6dc7a736f1b800-1b5cbb816dea8ee211adbe93597a966a-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/bangla-vision.png" alt="BANGLA VISION">
+                        </a>
+                    </li>
+                    <!-- 116 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/abc-news/index.m3u8?token=25822e6f1abe5e93091875c77a736d713fece6c4-14c37711b3d890c72f16a6bfa44201c5-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/abc-news.png" alt="ABC NEWS">
+                        </a>
+                    </li>
+                    <!-- 117 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/taaza-tv/index.m3u8?token=9c2bd61d5ec0fa299a405492ba58f79e4d363611-ed680021bf7287c3bca909dd71869499-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/taaza-tv.png" alt="TAAZA TV">
+                        </a>
+                    </li>
+                    <!-- 118 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/madani-tv/index.m3u8?token=386fea4b73ab4373e8d5b3e05e11d52a8b79b31a-93f599345b0ea2ea6aa3a83093eb8dc1-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/madani-tv.png" alt="MADANI TV">
+                        </a>
+                    </li>
+                    <!-- 119 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/ytv/index.m3u8?token=9da8a4184b8dbbdf1677a79af30f7d2ce44473b5-b4f80144fd4534542eb631d7949001ae-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/ytv.png" alt="YTV">
+                        </a>
+                    </li>
+                    <!-- 120 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/anb-news/index.m3u8?token=0ff454a1efee0e2bdc3d24a64f795a8e8ff44d4f-508a904d143ff37df5292c4823d02c52-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/anb-news.png" alt="ANB NEWS">
+                        </a>
+                    </li>
+                    <!-- 121 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/shemaroo-tv/index.m3u8?token=dae80534879dc43d14e534864b12c8042e5a49d4-3e7d158c0cf48724e1afa9df66ca105f-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/shemaroo-tv.png" alt="SHEMAROO TV">
+                        </a>
+                    </li>
+                    <!-- 122 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/rds-social-tv/index.m3u8?token=f3f5ff5eb28d2ff7cac9c2ebffcec862f2818ce2-825b94c9d85e2d904cffb92444deeb4d-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/rds-social-tv.png" alt="RDS SOCIAL TV">
+                        </a>
+                    </li>
+                    <!-- 123 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nhk-world/index.m3u8?token=879b37cc562f9339c946fcd8596c8a16ac263ebf-4290df2c5ef11db13ec6a6df3ae2aa2a-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/nhk-world.png" alt="NHK WORLD">
+                        </a>
+                    </li>
+                    <!-- 124 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/bek-tv-news/index.m3u8?token=4bf93ed4a4b84c6cbb5b86031fd6d477415ba7d8-0b7eaf0783ca794a58058c1fd17fc6bf-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/bek-tv-news.png" alt="BEK TV NEWS">
+                        </a>
+                    </li>
+                    <!-- 125 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tsn-2/index.m3u8?token=3d218cdcbff43294a57f2f9aae90eb38ecdb148e-43da7473542c23037fa3bb1f06ce92b2-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/tsn-2.png" alt="TSN 2">
+                        </a>
+                    </li>
+                    <!-- 126 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tbs/index.m3u8?token=4d9e9f58b649e5d0ee8f0f88dc38c72d94d8fa78-8d7341921604544d77897cb992cf5945-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/tbs.png" alt="TBS">
+                        </a>
+                    </li>
+                    <!-- 127 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dangal/index.m3u8?token=128288b6a787a48e04b4e715042b2c6622c33e10-e8c912bbc55a5bddb3e15da786b84527-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/dangal.png" alt="DANGAL">
+                        </a>
+                    </li>
+                    <!-- 128 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/epix-tv/index.m3u8?token=1dde352f26867df9209384bc2ec62441751abaee-e93872c692bd88852c68a5b6161b0ee3-1779212126-1779201326')">
+                            <img src="https://tvassets.roarzone.net/images/epix-tv.png" alt="EPIX TV">
+                        </a>
+                    </li>
+                    <!-- 129 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/9x-tashan/index.m3u8?token=13f67b5c5d0c69d865f698868491de9cbfd11993-8401951c6530244ceafefa8ce58f9cf9-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/9x-tashan.png" alt="9X TASHAN">
+                        </a>
+                    </li>
+                    <!-- 130 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/hindi-khabar/index.m3u8?token=fa58164269ab9dd2b22ba15bc04a2b763d367282-bee9e8909649824b1f5a84c74409c689-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/hindi-khabar.png" alt="HINDI KHABAR">
+                        </a>
+                    </li>
+                    <!-- 131 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sky-news/index.m3u8?token=aff7b1a0ec29050aacbe62eeea941c724fd2e642-7158bf5b43e671363dab80833642b888-1779212126-1779201326')">
+                            <img src="https://tvassets.roarzone.net/images/sky-news.png" alt="SKY NEWS">
+                        </a>
+                    </li>
+                    <!-- 132 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/manoranjan-tv/index.m3u8?token=c6839fc51b12ae27f8fa34f6ff5aee09179b2049-27dab724aa5c5c4244cdb513960af2be-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/manoranjan-tv.png" alt="MANORANJAN TV">
+                        </a>
+                    </li>
+                    <!-- 133 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dd-bangla/index.m3u8?token=455d5185187091a571fee7cba89c4ca928afc42a-18a88b5518ac05eb3e47692d875e0f40-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/dd-bangla.png" alt="DD BANGLA">
+                        </a>
+                    </li>
+                    <!-- 134 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/wof-1/index.m3u8?token=357e26ab53a0448bdb992c5f305a5d9d34cd5d25-df9b4850138a6fa8e8fe949fed4aa888-1779212126-1779201326')">
+                            <img src="https://tvassets.roarzone.net/images/wof-1.png" alt="WOF 1">
+                        </a>
+                    </li>
+                    <!-- 135 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tvcarib-kids-teens/index.m3u8?token=6f74618f541c0c9e9ab608be3b7cc1f24f82517c-d8a52bffeb4449e2c17029ddfc6471f7-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/tvcarib-kids-teens.png" alt="TVCARIB KIDS & TEENS">
+                        </a>
+                    </li>
+                    <!-- 136 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/accuweather/index.m3u8?token=0df93dd0394e6e775399536d703d87916a18c6b5-8e958cf207b01ad1ff9d2d1a53ca9aaa-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/accuweather.png" alt="ACCUWEATHER">
+                        </a>
+                    </li>
+                    <!-- 137 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/fox-weather/index.m3u8?token=185f9a8f8a9d1d0ab954a948224300d376d7c09e-49831b7bb92c8b8389ea53a871f2b2c9-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/fox-weather.png" alt="FOX WEATHER">
+                        </a>
+                    </li>
+                    <!-- 138 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sky-news-weather/index.m3u8?token=98fb3b192ad72de3229345c855b9bbd73ae229d8-3db8bbd2cf180326c6a9ea1199aa75e2-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sky-news-weather.png" alt="SKY NEWS WEATHER">
+                        </a>
+                    </li>
+                    <!-- 139 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/discover-pikstan/index.m3u8?token=9b4058eeaeca5e687f3b7ed6e82f9c6dc6af275e-ff0b427ffa599395f37c0065e4cdefb1-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/discover-pikstan.png" alt="DISCOVER PIKSTAN">
+                        </a>
+                    </li>
+                    <!-- 140 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/wild-tv/index.m3u8?token=588da663faab99a59663802445fb143171fc6306-9fe77460be861e058770b79de174603d-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/wild-tv.png" alt="WILD TV">
+                        </a>
+                    </li>
+                    <!-- 141 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/world-war-tv/index.m3u8?token=4b0a0dbb460987c2d40e12acbbea01cf76357f81-81056662100b68504f043b6441c61f9f-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/world-war-tv.png" alt="WORLD WAR TV">
+                        </a>
+                    </li>
+                    <!-- 142 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/india-today/index.m3u8?token=72d1941494b3515bae0a37c40f786c725fe695a6-66eec9b03af37c47861d1fe010b4405f-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/india-today.png" alt="INDIA TODAY">
+                        </a>
+                    </li>
+                    <!-- 143 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/geo-ent/index.m3u8?token=23398aef98fee0dca182fee26ea3d65235e52930-4a5ec4ffb60dd586096262caff9a1733-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/geo-ent.png" alt="GEO ENT">
+                        </a>
+                    </li>
+                    <!-- 144 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/drama-24/index.m3u8?token=9bd9bac44d6283ae927014ac3995a71665e60010-cdca4c10b3f2854762d506b98c906d8c-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/drama-24.png" alt="DRAMA 24">
+                        </a>
+                    </li>
+                    <!-- 145 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/oan/index.m3u8?token=708c5f9e1fe20b5c84e0ae7dc9d98dfd14d5d7d4-c0d5c8007814a1560fd5f5611c2dbf4e-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/oan.png" alt="OAN">
+                        </a>
+                    </li>
+                    <!-- 146 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/persiana-korea/index.m3u8?token=bc6dd26e8ed4a3a49f9ac61d462b21b3db2197e2-1a25f4d0ba3b9a98e4e6fd87b6d2dd5b-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/persiana-korea.png" alt="PERSIANA KOREA">
+                        </a>
+                    </li>
+                    <!-- 147 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/adventure-earth/index.m3u8?token=5c677c3e6105dfd7e42b3837d56207322bfea0c9-f2c2a4f6776e5fc665da7eda979e1454-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/adventure-earth.png" alt="ADVENTURE EARTH">
+                        </a>
+                    </li>
+                    <!-- 148 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/court-tv/index.m3u8?token=25ddce058b7499dc618b591a0387d96f5fb5486a-7887313f9f001a5fa47c864993dc4c7f-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/court-tv.png" alt="COURT TV">
+                        </a>
+                    </li>
+                    <!-- 149 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/saudia-radio/index.m3u8?token=ac5efc521b15475a11181c749a969ba12c45705c-319eb9c617874a2706fc3142b3bf8622-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/saudia-radio.png" alt="SAUDIA RADIO">
+                        </a>
+                    </li>
+                    <!-- 150 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/awaaz-india/index.m3u8?token=08ee373e9fceaa2e6dbbffc9db840e499ed334ba-f31ce2e2719a11f1a649468a2ce57841-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/awaaz-india.png" alt="AWAAZ INDIA">
+                        </a>
+                    </li>
+                    <!-- 151 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/iran-press/index.m3u8?token=9e3680244d7bfb05c4ae52cdb67d182e331716a1-5ad618f47cce2aa3c22f1c685f19f1cc-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/iran-press.png" alt="IRAN PRESS">
+                        </a>
+                    </li>
+                    <!-- 152 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/rongeen-tv/index.m3u8?token=6d590e6bdb0656ba88e20aaecbd87d72baff0e12-632212426608c810b1d1240efeec6181-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/rongeen-tv.png" alt="RONGEEN TV">
+                        </a>
+                    </li>
+                    <!-- 153 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/thikana/index.m3u8?token=f2768d95c79726f959132bd4a138aead56f00816-c9d6b0142a24e2389f6a1d71c99c2fd3-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/thikana.png" alt="THIKANA">
+                        </a>
+                    </li>
+                    <!-- 154 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/sony-atth/index.m3u8?token=c677848b8aa50811d58378c64a08f8c4c7f85fc9-0769b08d5028286a85e07ba4a61588b0-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/sony-atth.png" alt="SONY ATTH">
+                        </a>
+                    </li>
+                    <!-- 155 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/r-plus/index.m3u8?token=b2fca05bd197d66e5392a7a16cedf09c113e3d98-3a45ee8cbbbcdc29d3189ed95f999d2f-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/r-plus.png" alt="STAR PLUS">
+                        </a>
+                    </li>
+                    <!-- 156 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/zee-24-ghanta/index.m3u8?token=00f167d9daf01a707c0c1efb67f2ea24ef079032-c375c9bc3c8458028e7262ce7ca1b85b-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/zee-24-ghanta.png" alt="ZEE 24 GHANTA">
+                        </a>
+                    </li>
+                    <!-- 157 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/aljazeera/index.m3u8?token=94a9ffadc829b6a84f172bea19bfaf3e7ffa72aa-276ce56230c110f9f50cd336f2ab0763-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/aljazeera.png" alt="ALJAZEERA">
+                        </a>
+                    </li>
+                    <!-- 158 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/star-news/index.m3u8?token=ce1222413426436ebc19d66c70ce71d57592b741-5a97b0ed1843010264dcb8c3f1e5cbae-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/star-news.png" alt="STAR NEWS">
+                        </a>
+                    </li>
+                    <!-- 159 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/music-india/index.m3u8?token=d75766b77a7f830b7cc19f87e3042f21f3a28a85-742c0518b12bde4a7033469cb9ea01a9-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/music-india.png" alt="MUSIC INDIA">
+                        </a>
+                    </li>
+                    <!-- 160 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sonymax_2/index.m3u8?token=94ada3530700b6aa7ff4c76dc01d6e5fa16f73d7-c1c836ba41dfa5986d707b818bbb3ba8-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/sonymax2.png" alt="SONY MAX 2">
+                        </a>
+                    </li>
+                    <!-- 161 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/toffee_movie/index.m3u8?token=08670cd73b4e01eda2c5b30b7da580f0668ae067-54d1e5d390e30b6b19e225e1ee0517c3-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/toffee_movie.png" alt="TOFFEE MOVIES">
+                        </a>
+                    </li>
+                    <!-- 162 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cnn/index.m3u8?token=153a8214ad1deac43986d75d9708320ba3acc55b-6de42a60fd0d1461b58e65c123f313fb-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/cnn.png" alt="CNN">
+                        </a>
+                    </li>
+                    <!-- 163 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sonybbc_earth_hd/index.m3u8?token=e20262071ad8a4a9b12a0301b49060f63b20e421-d75035f7d38e37ab0d944ed2d51b7859-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/44.png" alt="SONY BBC EARTH HD">
+                        </a>
+                    </li>
+                    <!-- 164 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/animal-planet-hd/index.m3u8?token=1435774bb8a1c5074cfcf5c264a60361faf375b1-ef2f71ec44d172b31274d759af6a6f01-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/animal-planet-hd.png" alt="ANIMAL PLANET HD">
+                        </a>
+                    </li>
+                    <!-- 165 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cartoon-network/index.m3u8?token=e26a74823bc948006961ea1bbf6d86a1443ec6a4-97160b1e442f12fcf7708a6833d5eb80-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/cartoon-network.png" alt="CARTOON NETWORK HD">
+                        </a>
+                    </li>
+                    <!-- 166 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nickelodeon/index.m3u8?token=7b790b7cb09525dcf83e4dfc129e6cba1b4603a6-5ec7e14517d5e9a036a634ac10fef3ea-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/55.png" alt="NICK">
+                        </a>
+                    </li>
+                    <!-- 167 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge3/sonyyay/index.m3u8?token=65420da820ef7b1e8e40e76767be10a8a56a4923-0041c36892a03e7072db642715119c00-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/sonyyay.png" alt="SONY YAY">
+                        </a>
+                    </li>
+                    <!-- 168 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/tlc-hd/index.m3u8?token=2ffb66c029da7bcf1576452c5a8bea7370c49de7-520b9ebe0e9a414d7db5fff4bb90cb93-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/tlc-hd.png" alt="TLC HD">
+                        </a>
+                    </li>
+                    <!-- 169 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/3abn-kids/index.m3u8?token=cd0671b4ed97e2f4969d68f404b6b54e954aec73-a579acbfebdf4fb8648312d70ae657d6-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/3abn-kids.png" alt="3ABN KIDS">
+                        </a>
+                    </li>
+                    <!-- 170 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/dios-te-ve-kids/index.m3u8?token=4148c6d18b4fcbaa15054c1eb12988741fb63262-c65dbadd92195649539b6beb645073ca-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/dios-te-ve-kids.png" alt="DIOS TE VE KIDS">
+                        </a>
+                    </li>
+                    <!-- 171 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/khushboo/index.m3u8?token=fac402ade6eaaaaf8a0bf592a25a0714296a0cbd-0190b9e06ef326cd33c5b8eb1747e0b5-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/khushboo.png" alt="KHUSHBOO">
+                        </a>
+                    </li>
+                    <!-- 172 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/discovery-family/index.m3u8?token=cba97a86b0f0bf0ab51802cf4cd0fd0ba950be0f-60549619ce7ab3277a94d97778948bf3-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/discovery-family.png" alt="DISCOVERY FAMILY">
+                        </a>
+                    </li>
+                    <!-- 173 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/travel-channel/index.m3u8?token=fe1f9c833920acc23addcd43ecd35ee8a44edd73-f08aed6aad0f2897a2532211aec04843-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/travel-channel.png" alt="TRAVEL CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 174 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/disney-xd/index.m3u8?token=5aa5c3fe3f50311ea671d40949a75d7406431627-94afad2598c6aa9d2c43e95ebd2a9920-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/disney-xd.png" alt="DISNEY XD">
+                        </a>
+                    </li>
+                    <!-- 175 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/hbo-2/index.m3u8?token=0e51e88ae78735660971ebd2bbc8eabae35a0ef4-140d774ff45d9a134f0bd1e74a319118-1779212123-1779201323')">
+                            <img src="https://tvassets.roarzone.net/images/hbo-2.png" alt="HBO 2">
+                        </a>
+                    </li>
+                    <!-- 176 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/disney-jr/index.m3u8?token=e71511b20f1778f0853282c47351ef50308389b3-7e820480513a89d0e39621e01d0ce1e4-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/disney-jr.png" alt="DISNEY JR">
+                        </a>
+                    </li>
+                    <!-- 177 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nicktoons/index.m3u8?token=6e4ef09bde4d3b8f2b61be70a1855672da6c4e49-70e710435e4a682f3cf7a2a1ec3df985-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/nicktoons.png" alt="NICKTOONS">
+                        </a>
+                    </li>
+                    <!-- 178 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/nickjr/index.m3u8?token=65e2673fa4bd57c49d3ce30b87445c5baeeedde1-5e330a815621dc5a6747aed8499f0fd7-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/nickjr.png" alt="NICKJR">
+                        </a>
+                    </li>
+                    <!-- 179 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/teen-nick/index.m3u8?token=402d896eef98ab5ae247eeb6d1b7d72798c10f6b-4d9a5f394a8f582a5c42ec24212776c7-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/teen-nick.png" alt="TEEN NICK">
+                        </a>
+                    </li>
+                    <!-- 180 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/disney-channel/index.m3u8?token=18fb5ef2760ac7bb0be5bcfddba90dab204151fc-2d0644b6b9eb37aa3d27efa290b9b094-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/disney-channel.png" alt="DISNEY CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 181 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/moonbug-kids/index.m3u8?token=a191d6fef9e423b98b28a1e57b501e262e2d7e68-a31db749b3486e5480537acd2b820955-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/moonbug-kids.png" alt="MOONBUG KIDS">
+                        </a>
+                    </li>
+                    <!-- 182 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/4k-travel/index.m3u8?token=2faad654c301d8e332f43262e5452320bcf0346c-be433b0b0dbdeebd0e99d04d40f36d6d-1779212126-1779201326')">
+                            <img src="https://tvassets.roarzone.net/images/4k-travel.png" alt="4K TRAVEL">
+                        </a>
+                    </li>
+                    <!-- 183 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/intravel/index.m3u8?token=f02e8f189421ce68deaa6be29e8da398070cd4e5-c5d7cc43f19b51ebb4c6d035a14725f3-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/intravel.png" alt="INTRAVEL">
+                        </a>
+                    </li>
+                    <!-- 184 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/persiana-travel/index.m3u8?token=7f86dc4703d76398e97209681090bdda92893d5e-9964e56441857abdce23ec00fa9a1b02-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/persiana-travel.png" alt="PERSIANA TRAVEL">
+                        </a>
+                    </li>
+                    <!-- 185 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/travel-xp/index.m3u8?token=b8f9ae420a3247b799f539e3c93159788518ef9a-7458f4e4efd8bccb39b2a1b9498912ed-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/travel-xp.png" alt="TRAVEL XP">
+                        </a>
+                    </li>
+                    <!-- 186 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/movie-sphere/index.m3u8?token=b56747b0743689c680ecf0d879d1cbaddaa74f2b-f21f97728c9c39ec3cd65c7359592379-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/movie-sphere.png" alt="MOVIE SPHERE">
+                        </a>
+                    </li>
+                    <!-- 187 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/cowboy-movie-channel/index.m3u8?token=ef3337aca6fe1568c6521d68d9604127140c73a9-123d5665821cace6fedc75217a0f0865-1779212124-1779201324')">
+                            <img src="https://tvassets.roarzone.net/images/cowboy-movie-channel.png" alt="COWBOY MOVIE CHANNEL">
+                        </a>
+                    </li>
+                    <!-- 188 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/hindi-movie-classic-24/index.m3u8?token=d28e70e0689cb2f9a0e578c81c8ad2dc6c95c681-ca277dde2d968a3764153482c0c6e5f7-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/hindi-movie-classic-24.png" alt="HINDI MOVIE CLASSIC 24">
+                        </a>
+                    </li>
+                    <!-- 189 -->
+                    <li>
+                        <a onclick="playChannel('https://edge2.roarzone.net:8447/roarzone/edge5/pbs-kids/index.m3u8?token=397d92de24292017c0c934ac1bdbd74326d3b8d4-3d86e24d28ce8ab5c015d3a695808210-1779212125-1779201325')">
+                            <img src="https://tvassets.roarzone.net/images/pbs-kids.png" alt="PBS KIDS">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
     </div>
 
     <!-- ===== MARQUEE ===== -->
@@ -2223,6 +1985,84 @@
             return false;
         });
     </script>
-                 
+    <script>
+    // ===== RAS LIVE TV — লোডিং ওভারলে কন্ট্রোল =====
+(function () {
+  // প্লেয়ার খুঁজে বের করা
+  function findPlayer() {
+    var video = document.querySelector('video');
+    if (!video) return null;
+    var container = video.closest('.embed-responsive');
+    if (!container) return null;
+    return { video: video, container: container };
+  }
+
+  // প্রোগ্রেস বার রিসেট
+  function resetProgress() {
+    var fill = document.querySelector('#rasLoadingOverlay .ras-progress-fill');
+    if (fill) {
+      fill.style.animation = 'none';
+      fill.offsetHeight; // reflow
+      fill.style.animation = '';
+    }
+  }
+
+  // লোডিং ওভারলে যোগ করা
+  function addLoadingOverlay() {
+    var player = findPlayer();
+    if (!player) {
+      console.warn('RAS Loading: প্লেয়ার পাওয়া যায়নি');
+      return;
+    }
+
+    var overlay = document.getElementById('rasLoadingOverlay');
+    if (!overlay) return;
+
+    // ওভারলে প্লেয়ার কন্টেইনারে যোগ করুন
+    player.container.style.position = 'relative';
+    player.container.appendChild(overlay);
+    overlay.classList.remove('hidden');
+
+    var video = player.video;
+
+    // HLS.js সাপোর্ট
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      var _load = Hls.prototype.loadSource;
+      Hls.prototype.loadSource = function (url) {
+        overlay.classList.remove('hidden');
+        resetProgress();
+        return _load.call(this, url);
+      };
+    }
+
+    // নেটিভ ভিডিও ইভেন্ট
+    video.addEventListener('loadeddata', function () {
+      overlay.classList.add('hidden');
+    });
+    video.addEventListener('canplay', function () {
+      overlay.classList.add('hidden');
+    });
+    video.addEventListener('waiting', function () {
+      overlay.classList.remove('hidden');
+      resetProgress();
+    });
+    video.addEventListener('playing', function () {
+      overlay.classList.add('hidden');
+    });
+
+    // নিরাপত্তা টাইমআউট (১০ সেকেন্ড পর লুকিয়ে যাবে)
+    setTimeout(function () {
+      overlay.classList.add('hidden');
+    }, 10000);
+  }
+
+  // পৃষ্ঠা লোড হলে চালু করুন
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addLoadingOverlay);
+  } else {
+    addLoadingOverlay();
+  }
+})();
+    </script>             
 </body>
 </html>
